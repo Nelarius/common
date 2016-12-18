@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="narwhal::Buffer&lt;*&gt;">
+    <DisplayString>{{ capacity={capacity_} }}</DisplayString>
+    <Expand>
+      <Item Name="[capacity]" ExcludeView="simple">capacity_</Item>
+      <ArrayItems>
+        <Size>capacity_</Size>
+        <ValuePointer>($T1*)buffer_</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+  <Type Name="narwhal::Array&lt;*&gt;">
+    <DisplayString>{{ size={size_} }}</DisplayString>
+    <Expand>
+      <Item Name="[size]" ExcludeView="simple">size_</Item>
+      <ArrayItems>
+        <Size>size_</Size>
+        <ValuePointer>begin_</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+</AutoVisualizer>
