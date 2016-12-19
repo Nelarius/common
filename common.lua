@@ -1,6 +1,5 @@
 
 function test()
-
     project "test"
     kind "ConsoleApp"
     language "C++"
@@ -20,15 +19,21 @@ function test()
     filter "system:macosx"
         links { "UnitTest++" }
         libdirs { "extern/unittest++/lib/osx" }
-
 end
 
 function common()
-
     project "common"
     kind "StaticLib"
     language "C++"
     targetdir "lib"
     files { "include/**.h", "src/nlrsAllocator.cpp" }
+end
 
+function gl3w()
+    project "gl3w"
+    kind "StaticLib"
+    language "C"
+    targetdir "lib"
+    files { "extern/gl3w/src/gl3w.c" }
+    includedirs { "extern/gl3w/include" }
 end
