@@ -1,8 +1,8 @@
-#include "common/nlrsAliases.h"
-#include "common/nlrsAllocator.h"
-#include "common/nlrsArray.h"
-#include "common/nlrsLiterals.h"
-#include "common/nlrsRandom.h"
+#include "nlrsAliases.h"
+#include "nlrsAllocator.h"
+#include "nlrsArray.h"
+#include "nlrsLiterals.h"
+#include "nlrsRandom.h"
 #include "UnitTest++/UnitTest++.h"
 #include <utility>
 #include <vector>

@@ -4,8 +4,8 @@ function test(location)
     kind "ConsoleApp"
     language "C++"
     targetdir "bin"
-    files { location.."/common/test/**.cpp", location.."/common/src/common/**.cpp" }
-    includedirs { location.."/common/extern/unittest++" }
+    files { location.."/common/test/**.cpp", location.."/common/src/nlrsAllocator.cpp" }
+    includedirs { location.."/common/extern/unittest++", location.."/common/include" }
     debugdir "bin"
     filter "action:vs*"
         defines { "_CRT_SECURE_NO_WARNINGS" } -- This is to turn off warnings about 'localtime'
@@ -26,7 +26,20 @@ function common(location)
     kind "StaticLib"
     language "C++"
     targetdir "lib"
+    includedirs { location.."/common/include/" }
     files { location.."/common/include/**.h", location.."/common/src/nlrsAllocator.cpp" }
+end
+
+function renderer(location, sdl_include)
+    project "renderer"
+    kind "StaticLib"
+    language "C++"
+    targetdir "lib"
+    includedirs { location.."/common/include/", location.."/common/extern/gl3w/include", sdl_include }
+    files {
+        location.."/common/src/nlrsRenderer.cpp",
+        location.."/common/src/nlrsSDLWindow.cpp"
+    }
 end
 
 function gl3w(location)

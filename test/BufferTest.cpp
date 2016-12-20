@@ -1,5 +1,5 @@
-#include "common/nlrsBuffer.h"
-#include "common/nlrsLiterals.h"
+#include "nlrsBuffer.h"
+#include "nlrsLiterals.h"
 #include "UnitTest++/UnitTest++.h"
 #include <utility>
 

@@ -12,21 +12,21 @@ namespace detail
 {
 
 template<typename T>
-bool hasNans(const Vector2<T>& v)
+bool hasNans(const T(&v)[2])
 {
-    return std::isnan(v.x) || std::isnan(v.y);
+    return return std::isnan(v[0]) || std::isnan(v[1]);
 }
 
 template<typename T>
-bool hasNans(const Vector3<T>& v)
+bool hasNans(const T(&v)[3])
 {
-    return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z);
+    return std::isnan(v[0]) || std::isnan(v[1]) || std::isnan(v[2]);
 }
 
 template<typename T>
-bool hasNans(const Vector4<T>& v)
+bool hasNans(const T(&v)[4])
 {
-    return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z) || std::isnan(v.w);
+    return std::isnan(v[0]) || std::isnan(v[1]) || std::isnan(v[2]) || std::isnan(v[3]);
 }
 
 } // detail
