@@ -1,39 +1,39 @@
 
-function test()
+function test(location)
     project "test"
     kind "ConsoleApp"
     language "C++"
     targetdir "bin"
-    files { "test/**.cpp", "src/common/**.cpp" }
-    includedirs { "src", "extern/unittest++", "extern" }
+    files { location.."/common/test/**.cpp", location.."/common/src/common/**.cpp" }
+    includedirs { location.."/common/extern/unittest++" }
     debugdir "bin"
     filter "action:vs*"
         defines { "_CRT_SECURE_NO_WARNINGS" } -- This is to turn off warnings about 'localtime'
     filter { "Debug", "action:vs*" }
         links { "UnitTest++" }
-        libdirs { "extern/unittest++/lib/win64/Debug" }
+        libdirs { location.."/common/extern/unittest++/lib/win64/Debug" }
     filter { "Release or Test", "action:vs*" }
         links { "UnitTest++" }
-        libdirs { "extern/unittest++/lib/win64/Release" }
+        libdirs { location.."/common/extern/unittest++/lib/win64/Release" }
 
     filter "system:macosx"
         links { "UnitTest++" }
-        libdirs { "extern/unittest++/lib/osx" }
+        libdirs { location.."/common/extern/unittest++/lib/osx" }
 end
 
-function common()
+function common(location)
     project "common"
     kind "StaticLib"
     language "C++"
     targetdir "lib"
-    files { "include/**.h", "src/nlrsAllocator.cpp" }
+    files { location.."/common/include/**.h", location.."/common/src/nlrsAllocator.cpp" }
 end
 
-function gl3w()
+function gl3w(location)
     project "gl3w"
     kind "StaticLib"
     language "C"
     targetdir "lib"
-    files { "extern/gl3w/src/gl3w.c" }
-    includedirs { "extern/gl3w/include" }
+    files { "extern/common/extern/gl3w/src/gl3w.c" }
+    includedirs { location.."/common/extern/gl3w/include" }
 end
