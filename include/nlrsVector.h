@@ -124,6 +124,16 @@ struct Vector2
         return Vector2<T>{ x / val, y / val };
     }
 
+    bool operator==(const Vector2<T>& rhs) const
+    {
+        return x == rhs.x && y == rhs.y;
+    }
+
+    bool operator!=(const Vector2<T>& rhs) const
+    {
+        return x != rhs.x || y != rhs.y;
+    }
+
     T operator[](usize i) const
     {
         NLRS_ASSERT(i < 2u);
@@ -248,6 +258,16 @@ struct Vector3
     Vector3 operator/(T val) const
     {
         return Vector3<T>{ x / val, y / val, z / val };
+    }
+
+    bool operator==(const Vector3<T>& rhs) const
+    {
+        return x == rhs.x && y == rhs.y && z == rhs.z;
+    }
+
+    bool operator!=(const Vector3<T>& rhs) const
+    {
+        return x != rhs.x || y != rhs.y || z != rhs.z;
     }
 
     T operator[](usize i) const
@@ -378,6 +398,16 @@ struct Vector4
     Vector4 operator/(T val) const
     {
         return Vector4<T>{ x / val, y / val, z / val, w / val };
+    }
+
+    bool operator==(const Vector4<T>& rhs) const
+    {
+        return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;
+    }
+
+    bool operator!=(const Vector4<T>& rhs) const
+    {
+        return x != rhs.x || y != rhs.y || z != rhs.z || w != rhs.w;
     }
 
     T operator[](usize i) const
