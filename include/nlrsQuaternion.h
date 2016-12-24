@@ -41,13 +41,20 @@ public:
     // get the rotation between two normalized axes
     static Quaternion<T> rotationBetweenAxes(Vector3<T> s, Vector3<T> t)
     {
-        NARWHAL_ASSERT(s.norm() - T(1.0) < T(0.00001));
-        NARWHAL_ASSERT(t.norm() - T(1.0) < T(0.00001));
+        NLRS_ASSERT(s.norm() - T(1.0) < T(0.00001));
+        NLRS_ASSERT(t.norm() - T(1.0) < T(0.00001));
         T e = s.dot(t);
         T div = T(1.0) / std::sqrt(T(2.0) * (T(1.0) + e));
         return Quaternion<T> {
             s.cross(t).normalized() * div, T(2.0) * div
         };
+    }
+
+    static Quaternion<T> fromAxisAngle(Vector3<T> axis, T angle)
+    {
+        axis.normalize();
+        axis = axis * std::sin(T(0.5) * angle);
+        return Quaternion<T>{ axis, std::cos(T(0.5) * angle) };
     }
 
     template<typename D>

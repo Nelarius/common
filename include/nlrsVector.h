@@ -4,6 +4,7 @@
 #include "nlrsAssert.h"
 #include <algorithm>
 #include <cmath>
+#include <initializer_list>
 
 namespace nlrs
 {
@@ -48,6 +49,19 @@ struct Vector2
         : data{ array[0], array[1] }
     {
         NLRS_ASSERT(!detail::hasNans(*this));
+    }
+
+    Vector2(std::initializer_list<T> l)
+        : x(T(0)),
+        y(T(0))
+    {
+        NLRS_ASSERT(l.size() == 2u);
+        u32 i = 0u;
+        for (T t : l)
+        {
+            data[i] = t;
+            ++i;
+        }
     }
 
     template<typename D>
@@ -174,6 +188,35 @@ struct Vector3
         : data{ array[0], array[1], array[2] }
     {
         NLRS_ASSERT(!detail::hasNans(*this));
+    }
+
+    Vector3(std::initializer_list<T> l)
+        : x(T(0)),
+        y(T(0)),
+        z(T(0))
+    {
+        NLRS_ASSERT(l.size() == 3u);
+        u32 i = 0u;
+        for (T t : l)
+        {
+            data[i] = t;
+            ++i;
+        }
+    }
+
+    static Vector3<T> axisX()
+    {
+        return Vector3<T>{ T(1), T(0), T(0) };
+    }
+
+    static Vector3<T> axisY()
+    {
+        return Vector3<T>{ T(0), T(1), T(0) };
+    }
+
+    static Vector3<T> axisZ()
+    {
+        return Vector3<T>{ T(0), T(0), T(1) };
     }
 
     template<typename D>
@@ -317,6 +360,21 @@ struct Vector4
         : data{ array[0], array[1], array[2], array[3] }
     {
         NLRS_ASSERT(!detail::hasNans(*this));
+    }
+
+    Vector4(std::initializer_list<T> l)
+        : x(T(0)),
+        y(T(0)),
+        z(T(0)),
+        w(T(0))
+    {
+        NLRS_ASSERT(l.size() == 4u);
+        u32 i = 0u;
+        for (T t : l)
+        {
+            data[i] = t;
+            ++i;
+        }
     }
 
     template<typename D>
