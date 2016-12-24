@@ -74,7 +74,7 @@ void SystemAllocator::free(void* ptr)
     std::free(ptr);
 }
 
-#ifdef NARWHAL_DEBUG
+#ifdef NLRS_DEBUG
 #define markAllocBytes(memory, numBytes) std::memset(memory, 0xa5, numBytes)
 #define markFreeBytes(memory, numBytes) std::memset(memory, 0xee, numBytes)
 #else
