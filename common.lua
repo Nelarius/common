@@ -1,5 +1,5 @@
 
-function test(location)
+function project_test(location)
     project "test"
     kind "ConsoleApp"
     language "C++"
@@ -21,7 +21,7 @@ function test(location)
         libdirs { location.."/common/extern/unittest++/lib/osx" }
 end
 
-function common(location)
+function project_common(location)
     project "common"
     kind "StaticLib"
     language "C++"
@@ -30,7 +30,7 @@ function common(location)
     files { location.."/common/include/**.h", location.."/common/src/nlrsAllocator.cpp" }
 end
 
-function renderer(location, sdl_include)
+function project_renderer(location, sdl_include)
     project "renderer"
     kind "StaticLib"
     language "C++"
@@ -42,7 +42,7 @@ function renderer(location, sdl_include)
     }
 end
 
-function gl3w(location)
+function project_gl3w(location)
     project "gl3w"
     kind "StaticLib"
     language "C"
