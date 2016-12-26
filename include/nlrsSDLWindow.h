@@ -2,19 +2,25 @@
 
 #include "nlrsAliases.h"
 #include "nlrsLocator.h"
-#include "SDL.h"
+
 #include <string>
 
-namespace nlrs {
+struct SDL_Window;
 
-class Window {
+namespace nlrs
+{
+
+class Window
+{
 public:
-    enum Flags {
+    enum Flags
+    {
         Opengl = 2u,
         Resizable = 32u
     };
 
-    struct Options {
+    struct Options
+    {
         std::string name{ "nlrs" };
         int width{ 1000 };
         int height{ 800 };
@@ -24,10 +30,10 @@ public:
     Window() = default;
     ~Window();
 
-    Window(const Window&)               = delete;
-    Window(Window&&)                    = delete;
-    Window& operator=(const Window&)    = delete;
-    Window& operator=(Window&&)         = delete;
+    Window(const Window&) = delete;
+    Window(Window&&) = delete;
+    Window& operator=(const Window&) = delete;
+    Window& operator=(Window&&) = delete;
 
     bool initialize(const Options& opts);
 

@@ -30,8 +30,8 @@ function project_common(location)
     files { location.."/common/include/**.h", location.."/common/src/nlrsAllocator.cpp" }
 end
 
-function project_renderer(location, sdl_include)
-    project "renderer"
+function project_window(location, sdl_include)
+    project "window"
     kind "StaticLib"
     language "C++"
     targetdir "lib"

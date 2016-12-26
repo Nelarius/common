@@ -154,7 +154,7 @@ GLenum getBindingTarget(GLenum type)
     }
 }
 
-#ifdef NARWHAL_DEBUG
+#ifdef NLRS_DEBUG
 void debugCallback(GLenum source,
     GLenum type,
     GLuint id,
