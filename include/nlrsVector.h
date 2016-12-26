@@ -109,14 +109,14 @@ struct Vector2
         y(T(0))
     {
         NLRS_ASSERT(l.size() == 2u);
-        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
-        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
         u32 i = 0u;
         for (T t : l)
         {
             data[i] = t;
             ++i;
         }
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
     }
 
     template<typename D>
@@ -288,14 +288,14 @@ struct Vector3
         z(T(0))
     {
         NLRS_ASSERT(l.size() == 3u);
-        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
-        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
         u32 i = 0u;
         for (T t : l)
         {
             data[i] = t;
             ++i;
         }
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
     }
 
     static Vector3 axisX()
@@ -507,14 +507,14 @@ struct Vector4
         w(T(0))
     {
         NLRS_ASSERT(l.size() == 4u);
-        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
-        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
         u32 i = 0u;
         for (T t : l)
         {
             data[i] = t;
             ++i;
         }
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
     }
 
     template<typename D>
