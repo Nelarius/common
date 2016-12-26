@@ -21,14 +21,29 @@ struct Number
         return std::isnan(v[0]) || std::isnan(v[1]);
     }
 
+    static bool hasInfs(const T(&v)[2])
+    {
+        return std::isinf(v[0]) || std::isinf(v[1]);
+    }
+
     static bool hasNans(const T(&v)[3])
     {
         return std::isnan(v[0]) || std::isnan(v[1]) || std::isnan(v[2]);
     }
 
+    static bool hasInfs(const T(&v)[3])
+    {
+        return std::isinf(v[0]) || std::isinf(v[1]) || std::isinf(v[2]);
+    }
+
     static bool hasNans(const T(&v)[4])
     {
         return std::isnan(v[0]) || std::isnan(v[1]) || std::isnan(v[2]) || std::isnan(v[3]);
+    }
+
+    static bool hasInfs(const T(&v)[4])
+    {
+        return std::isinf(v[0]) || std::isinf(v[1]) || std::isinf(v[2]) || std::isinf(v[3]);
     }
 };
 
@@ -40,12 +55,27 @@ struct Number<T, false>
         return false;
     }
 
+    static bool hasInfs(const T(&v)[2])
+    {
+        return false;
+    }
+
     static bool hasNans(const T(&v)[3])
     {
         return false;
     }
 
+    static bool hasInfs(const T(&v)[3])
+    {
+        return false;
+    }
+
     static bool hasNans(const T(&v)[4])
+    {
+        return false;
+    }
+
+    static bool hasInfs(const T(&v)[4])
     {
         return false;
     }
@@ -64,12 +94,14 @@ struct Vector2
         : data{ x, y }
     {
         NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
     }
 
     Vector2(const T(&array)[2])
         : data{ array[0], array[1] }
     {
         NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
     }
 
     Vector2(std::initializer_list<T> l)
@@ -78,6 +110,7 @@ struct Vector2
     {
         NLRS_ASSERT(l.size() == 2u);
         NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
         u32 i = 0u;
         for (T t : l)
         {
@@ -239,12 +272,14 @@ struct Vector3
         : data{ x, y, z }
     {
         NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
     }
 
     Vector3(const T(&array)[3])
         : data{ array[0], array[1], array[2] }
     {
         NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
     }
 
     Vector3(std::initializer_list<T> l)
@@ -254,6 +289,7 @@ struct Vector3
     {
         NLRS_ASSERT(l.size() == 3u);
         NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
         u32 i = 0u;
         for (T t : l)
         {
@@ -447,18 +483,21 @@ struct Vector4
         : data{ v.x, v.y, v.z, w }
     {
         NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
     }
 
     Vector4(T x, T y, T z, T w)
         : data{ x, y, z, w }
     {
         NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
     }
 
     Vector4(const T(&array)[4])
         : data{ array[0], array[1], array[2], array[3] }
     {
         NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
     }
 
     Vector4(std::initializer_list<T> l)
@@ -469,6 +508,7 @@ struct Vector4
     {
         NLRS_ASSERT(l.size() == 4u);
         NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(data)));
+        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(data)));
         u32 i = 0u;
         for (T t : l)
         {
