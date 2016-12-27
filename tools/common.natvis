@@ -1,23 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-  <Type Name="narwhal::Buffer&lt;*&gt;">
-    <DisplayString>{{ capacity={capacity_} }}</DisplayString>
-    <Expand>
-      <Item Name="[capacity]" ExcludeView="simple">capacity_</Item>
-      <ArrayItems>
-        <Size>capacity_</Size>
-        <ValuePointer>($T1*)buffer_</ValuePointer>
-      </ArrayItems>
-    </Expand>
-  </Type>
-  <Type Name="narwhal::Array&lt;*&gt;">
-    <DisplayString>{{ size={size_} }}</DisplayString>
-    <Expand>
-      <Item Name="[size]" ExcludeView="simple">size_</Item>
-      <ArrayItems>
-        <Size>size_</Size>
-        <ValuePointer>begin_</ValuePointer>
-      </ArrayItems>
-    </Expand>
-  </Type>
+    <Type Name="nlrs::Buffer&lt;*&gt;">
+        <DisplayString>{{ capacity={capacity_} }}</DisplayString>
+        <Expand>
+            <Item Name="[capacity]" ExcludeView="simple">capacity_</Item>
+            <ArrayItems>
+                <Size>capacity_</Size>
+                <ValuePointer>($T1*)buffer_</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="nlrs::Array&lt;*&gt;">
+        <DisplayString>{{ size={size_} }}</DisplayString>
+        <Expand>
+            <Item Name="[size]" ExcludeView="simple">size_</Item>
+            <ArrayItems>
+                <Size>size_</Size>
+                <ValuePointer>begin_</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="nlrs::Vector2&lt;*&gt;">
+        <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+    </Type>
+    <Type Name="nlrs::Vector3&lt;*&gt;">
+        <DisplayString>{{ x={x}, y={y}, z={z}}}</DisplayString>
+    </Type>
+    <Type Name="nlrs::Vector4&lt;*&gt;">
+        <DisplayString>{{ x={x}, y={y}, z={z}, w={w} }}</DisplayString>
+    </Type>
+    <Type Name="nlrs::Quaternion&lt;*&gt;">
+        <DisplayString>{{ x={v.x}, y={v.y}, z={v.z}, w={w} }}</DisplayString>
+    </Type>
 </AutoVisualizer>
