@@ -6,6 +6,7 @@
 #include "nlrsBuffer.h"
 #include <initializer_list>
 #include <new>
+#include <type_traits>
 #include <utility>
 
 namespace nlrs
@@ -439,6 +440,16 @@ public:
     ConstRIterator  rbegin() const;
     ConstRIterator  rend()   const;
 
+    T* ptr()
+    {
+        return reinterpret_cast<T*>(&storage_[0]);
+    }
+
+    const T* ptr() const
+    {
+        return reinterpret_cast<const T*>(&storage_[0]);
+    }
+
     // the element must be copy-constructible
     usize pushBack(const T&);
 
@@ -449,7 +460,7 @@ public:
     std::size_t maxSize() const { return N; }
 
 private:
-    uint8_t     storage_[sizeof(T) * N];
+    typename std::aligned_storage<sizeof(T), alignof(T)>::type storage_[N];
     std::size_t size_{ 0u };
 };
 
@@ -483,9 +494,8 @@ template<typename T, usize N>
 const T& StaticArray<T, N>::at(usize i) const
 {
     NLRS_ASSERT(i < size_);
-    NLRS_ASSERT(size_ * sizeof(T) <= sizeof(T) * N);
-    usize index = i * sizeof(T);
-    return *reinterpret_cast<const T*>(&storage_[index]);
+    NLRS_ASSERT(size_ <= N);
+    return *(ptr() + i);
 }
 
 template<typename T, usize N>
@@ -504,35 +514,35 @@ template<typename T, usize N>
 typename StaticArray<T, N>::Iterator StaticArray<T, N>::begin()
 {
     NLRS_ASSERT(size_ <= N);
-    return reinterpret_cast<T*>(&storage_[0u]);
+    return ptr();
 }
 
 template<typename T, usize N>
 typename StaticArray<T, N>::Iterator StaticArray<T, N>::end()
 {
     NLRS_ASSERT(size_ <= N);
-    return (T*)(&storage_[0u] + sizeof(T) * size_);
+    return (T*)(ptr() + size_);
 }
 
 template<typename T, usize N>
 typename StaticArray<T, N>::ConstIterator StaticArray<T, N>::begin() const
 {
     NLRS_ASSERT(size_ <= N);
-    return reinterpret_cast<const T*>(&storage_[0u]);
+    return ptr();
 }
 
 template<typename T, usize N>
 typename StaticArray<T, N>::ConstIterator StaticArray<T, N>::end() const
 {
     NLRS_ASSERT(size_ <= N);
-    return (const T*)(&storage_[0u] + sizeof(T) * size_);
+    return (const T*)(ptr() + size_);
 }
 
 template<typename T, usize N>
 typename StaticArray<T, N>::RIterator StaticArray<T, N>::rbegin()
 {
     NLRS_ASSERT(size_ <= N);
-    return RIterator(reinterpret_cast<T*>(&storage_[sizeof(T) * (size_ - 1u)]));
+    return RIterator(reinterpret_cast<T*>(&storage_[size_ - 1u]));
 }
 
 template<typename T, usize N>
@@ -546,31 +556,29 @@ template<typename T, usize N>
 typename StaticArray<T, N>::ConstRIterator StaticArray<T, N>::rbegin() const
 {
     NLRS_ASSERT(size_ <= N);
-    return ConstRIterator(reinterpret_cast<const T*>(&storage_[sizeof(T) * (size_ - 1u)]));
+    return ConstRIterator(reinterpret_cast<const T*>(&storage_[size_ - 1u]));
 }
 
 template<typename T, usize N>
 typename StaticArray<T, N>::ConstRIterator StaticArray<T, N>::rend() const
 {
     NLRS_ASSERT(size_ <= N);
-    return ConstRIterator(reinterpret_cast<const T*>(&storage_[0u]) - 1u);
+    return ConstRIterator(ptr() - 1u);
 }
 
 template<typename T, usize N>
 usize StaticArray<T, N>::pushBack(const T& elem)
 {
-    NLRS_ASSERT(size_ * sizeof(T) < sizeof(T) * N);
-    usize index = size_ * sizeof(T);
-    new (&storage_[index]) T(elem);
+    NLRS_ASSERT(size_ < N);
+    new (ptr() + size_) T(elem);
     return size_++;
 }
 
 template<typename T, usize N>
 usize StaticArray<T, N>::pushBack(T&& elem)
 {
-    NLRS_ASSERT(size_ * sizeof(T) < sizeof(T) * N);
-    usize index = size_ * sizeof(T);
-    new (&storage_[index]) T(std::move(elem));
+    NLRS_ASSERT(size_ < N);
+    new (ptr() + size_) T(std::move(elem));
     return size_++;
 }
 
