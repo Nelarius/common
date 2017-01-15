@@ -416,11 +416,13 @@ class StaticArray
 {
 public:
     StaticArray() = default;
-    StaticArray(const StaticArray&) = delete;
-    StaticArray& operator=(const StaticArray&) = delete;
-
+    StaticArray(const StaticArray&) = default;
+    StaticArray& operator=(const StaticArray&) = default;
     StaticArray(std::initializer_list<T>);
     ~StaticArray();
+
+    StaticArray(StaticArray&&) = delete;
+    StaticArray& operator=(StaticArray&&) = delete;
 
     using Iterator = T*;
     using ConstIterator = const T*;

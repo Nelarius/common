@@ -359,6 +359,32 @@ SUITE(StaticArrayTest)
         StaticArray<int, 3> array;
         CHECK(array.rbegin() == array.rend());
     }
+
+    TEST(IsCopyAssignable)
+    {
+        StaticArray<int, 3> a1;
+        a1.pushBack(1);
+        a1.pushBack(2);
+        a1.pushBack(3);
+        StaticArray<int, 3> a2 = a1;
+
+        CHECK_EQUAL(a1[0], a2[0]);
+        CHECK_EQUAL(a1[1], a2[1]);
+        CHECK_EQUAL(a1[2], a2[2]);
+    }
+
+    TEST(IsCopyConstructable)
+    {
+        StaticArray<int, 3> a1;
+        a1.pushBack(1);
+        a1.pushBack(2);
+        a1.pushBack(3);
+        StaticArray<int, 3> a2(a1);
+
+        CHECK_EQUAL(a1[0], a2[0]);
+        CHECK_EQUAL(a1[1], a2[1]);
+        CHECK_EQUAL(a1[2], a2[2]);
+    }
 }
 
 }
