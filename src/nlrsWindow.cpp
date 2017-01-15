@@ -1,11 +1,11 @@
-#include "nlrsSDLWindow.h"
+#include "nlrsWindow.h"
 #include "nlrsAssert.h"
 #include "SDL.h"
 
 namespace nlrs
 {
 
-Window::~Window()
+SdlWindow::~SdlWindow()
 {
     if (window_)
     {
@@ -13,7 +13,7 @@ Window::~Window()
     }
 }
 
-bool Window::initialize(const Options& opts)
+bool SdlWindow::initialize(const Options& opts)
 {
     static_assert(Resizable == SDL_WINDOW_RESIZABLE, "Invalid Window::Flag value");
     static_assert(Opengl == SDL_WINDOW_OPENGL, "Invalid Window::Flag value");

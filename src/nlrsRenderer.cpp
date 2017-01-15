@@ -1,5 +1,5 @@
 #include "nlrsRenderer.h"
-#include "nlrsSDLWindow.h"
+#include "nlrsWindow.h"
 #include "nlrsAliases.h"
 #include "nlrsAllocator.h"
 #include "nlrsArray.h"

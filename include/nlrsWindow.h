@@ -10,7 +10,7 @@ struct SDL_Window;
 namespace nlrs
 {
 
-class Window
+class SdlWindow
 {
 public:
     enum Flags
@@ -27,22 +27,22 @@ public:
         u32 flags{ Resizable | Opengl };
     };
 
-    Window() = default;
-    ~Window();
+    SdlWindow() = default;
+    ~SdlWindow();
 
-    Window(const Window&) = delete;
-    Window(Window&&) = delete;
-    Window& operator=(const Window&) = delete;
-    Window& operator=(Window&&) = delete;
+    SdlWindow(const SdlWindow&) = delete;
+    SdlWindow(SdlWindow&&) = delete;
+    SdlWindow& operator=(const SdlWindow&) = delete;
+    SdlWindow& operator=(SdlWindow&&) = delete;
 
     bool initialize(const Options& opts);
 
-    inline SDL_Window* rawWindow() { return window_; }
+    inline SDL_Window* ptr() { return window_; }
 
 private:
     SDL_Window*     window_{ nullptr };
 };
 
-using WindowLocator = Locator<Window>;
+using WindowLocator = Locator<SdlWindow>;
 
 }
