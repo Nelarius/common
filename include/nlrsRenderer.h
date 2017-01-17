@@ -8,19 +8,18 @@
 namespace nlrs
 {
 
-/*
- * The renderer uses SDLWindow, which has to be set via the WindowLocator.
- */
+// TODO: pass window parameter explicitly
 class Renderer
 {
 public:
     using BufferInfo = u64;
     using ShaderInfo = u32;
-    using PipelineInfo = usize;
+    using PipelineInfo = uptr;
+    using DrawStateInfo = usize;
 
     static constexpr BufferInfo     InvalidBuffer{ 0xffffffffffffffff };
     static constexpr ShaderInfo     InvalidShader{ 0u };
-    static constexpr PipelineInfo   InvalidPipeline{ 0xffffffffffffffff };
+    static constexpr PipelineInfo   InvalidPipeline{ 0u };
 
     enum class BufferType
     {
@@ -87,17 +86,57 @@ public:
         AttributeType   type;
     };
 
+    // for OpenGL correspondance, see http://docs.gl/gl4/glDepthFunc
+    enum class ComparisonFunction
+    {
+        Never,
+        Less,
+        Equal,
+        Lequal,
+        Greater,
+        NotEqual,
+        Gequal,
+        Always
+    };
+
+    // for OpenGL correspondance, see http://docs.gl/gl4/glBlendEquation
+    // TODO: see which one of these OpenGL uses by default
+    enum class BlendFunction
+    {
+        Add,
+        Subtract,
+        ReverseSubtract,
+        Min,
+        Max
+    };
+
     struct PipelineOptions
     {
+        PipelineOptions(ShaderInfo shaderInfo)
+            : shader(shaderInfo),
+            layout(),
+            depthTestEnabled(true),
+            cullingEnabled(true),
+            scissorTestEnabled(false),
+            blendEnabled(false),
+            depthComparisonFunction(ComparisonFunction::Less),
+            blendFunction(BlendFunction::Add)   // TODO: see which one of these OpenGL uses by default
+        {}
+
         ShaderInfo                       shader;
         StaticArray<VertexAttribute, 6>  layout;
+        bool depthTestEnabled;
+        bool cullingEnabled;
+        bool scissorTestEnabled;
+        bool blendEnabled;
+        ComparisonFunction depthComparisonFunction;
+        BlendFunction blendFunction;
+    };
 
-        // TODO: other options such as
-        // blend function
-        // depth test
-        // culling enabled
-        // scissor test enabled
-        // depth comparison function
+    struct DrawStateOptions
+    {
+        PipelineInfo pipeline;
+        BufferInfo buffer;
     };
 
     struct Options
@@ -140,6 +179,10 @@ public:
     PipelineInfo makePipeline(const PipelineOptions& opts);
 
     void releasePipeline(PipelineInfo);
+
+    DrawStateInfo makeDrawState(const DrawStateOptions& opts);
+
+    void releaseDrawState(DrawStateInfo);
 
     // TODO: this will probably be included in a draw pass
     void clearBuffers();

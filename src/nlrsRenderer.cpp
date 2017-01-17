@@ -5,6 +5,7 @@
 #include "nlrsArray.h"
 #include "nlrsConfiguration.h"
 #include "nlrsLog.h"
+#include "nlrsObjectPool.h"
 #include "SDL_video.h"
 #include "GL/gl3w.h"
 #include <string>
@@ -39,6 +40,12 @@ struct PipelineObject
 {
     nlrs::Renderer::ShaderInfo   shader;
     nlrs::Array<GlAttribute>     layout;
+    bool depthTestEnabled;
+    bool cullingEnabled;
+    bool scissorTestEnabled;
+    bool blendEnabled;
+    nlrs::Renderer::ComparisonFunction depthComparisonFunction;
+    nlrs::Renderer::BlendFunction blendFunction;
 };
 
 GLenum asGlBufferTarget(nlrs::Renderer::BufferType type)
@@ -118,6 +125,35 @@ GLenum asGlAttributeType(nlrs::Renderer::AttributeType type)
     return 0u;
 }
 
+GLenum asGlBlendMode(nlrs::Renderer::BlendFunction function)
+{
+    switch(function)
+    {
+        case nlrs::Renderer::BlendFunction::Add: return GL_FUNC_ADD;
+        case nlrs::Renderer::BlendFunction::Subtract: return GL_FUNC_SUBTRACT;
+        case nlrs::Renderer::BlendFunction::ReverseSubtract: return GL_FUNC_REVERSE_SUBTRACT;
+    }
+    NLRS_ASSERT(!"You shouldn't reach this");
+    return 0;
+}
+
+GLenum asGlDepthFunc(nlrs::Renderer::ComparisonFunction function)
+{
+    switch(function)
+    {
+        case nlrs::Renderer::ComparisonFunction::Never: return GL_NEVER;
+        case nlrs::Renderer::ComparisonFunction::Less: return GL_LESS;
+        case nlrs::Renderer::ComparisonFunction::Equal: return GL_EQUAL;
+        case nlrs::Renderer::ComparisonFunction::Lequal: return GL_LEQUAL;
+        case nlrs::Renderer::ComparisonFunction::Greater: return GL_GREATER;
+        case nlrs::Renderer::ComparisonFunction::NotEqual: return GL_NOTEQUAL;
+        case nlrs::Renderer::ComparisonFunction::Gequal: return GL_GEQUAL;
+        case nlrs::Renderer::ComparisonFunction::Always: return GL_ALWAYS;
+    }
+    NLRS_ASSERT(!"You shouldn't reach this");
+    return 0;
+}
+
 GLenum getBindingTarget(GLenum type)
 {
     switch (type)
@@ -155,7 +191,8 @@ GLenum getBindingTarget(GLenum type)
 }
 
 #ifdef NLRS_DEBUG
-void debugCallback(GLenum source,
+void debugCallback(
+    GLenum source,
     GLenum type,
     GLuint id,
     GLenum severity,
@@ -235,9 +272,9 @@ namespace nlrs
 
 struct Renderer::RenderState
 {
-    SDL_GLContext           context;
-    Array<PipelineObject>   pipelines;
-    Array<usize>            pipelineFreeList;
+    SDL_GLContext context;
+    ObjectPool<PipelineObject> pipelines;
+    ObjectPool<DrawStateOptions> drawStates;
 };
 
 Renderer::Renderer()
@@ -245,10 +282,12 @@ Renderer::Renderer()
 {
     // TODO: heap allocation required here?
     state_ = new (HeapAllocatorLocator::get()->allocate(sizeof(RenderState), alignof(RenderState)))
-        RenderState{
+        RenderState
+    {
         nullptr,
-        Array<PipelineObject>(*HeapAllocatorLocator::get()),
-        Array<usize>(*HeapAllocatorLocator::get()) };
+        ObjectPool<PipelineObject>(*HeapAllocatorLocator::get()),
+        ObjectPool<DrawStateOptions>(*HeapAllocatorLocator::get())
+    };
 }
 
 Renderer::~Renderer()
@@ -278,7 +317,7 @@ bool Renderer::initialize(const Options& opts)
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, opts.msBuffers);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, opts.msSamples);
 
-    state_->context = SDL_GL_CreateContext(WindowLocator::get()->rawWindow());
+    state_->context = SDL_GL_CreateContext(WindowLocator::get()->ptr());
 
     if (state_->context == NULL)
     {
@@ -438,21 +477,10 @@ Renderer::PipelineInfo Renderer::makePipeline(const Renderer::PipelineOptions& o
         }
     }
 
-    usize i;
+    // TODO: all the other state
+    PipelineObject* obj = state_->pipelines.create(opts.shader, std::move(layout));
 
-    if (state_->pipelineFreeList.size() > 0u)
-    {
-        i = state_->pipelineFreeList.back();
-        state_->pipelineFreeList.popBack();
-
-        new (&state_->pipelines.at(i)) PipelineObject{ opts.shader, std::move(layout) };
-    }
-    else
-    {
-        usize i = state_->pipelines.pushBack(PipelineObject{ opts.shader, std::move(layout) });
-    }
-
-    return i;
+    return reinterpret_cast<uptr>(obj);
 }
 
 void Renderer::releasePipeline(PipelineInfo info)
@@ -463,9 +491,9 @@ void Renderer::releasePipeline(PipelineInfo info)
         return;
     }
 
-    state_->pipelines[info].~PipelineObject();
-    std::memset(&state_->pipelines[info], 0, sizeof(PipelineObject));
-    state_->pipelineFreeList.pushBack(info);
+    PipelineObject* obj = reinterpret_cast<PipelineObject*>(info);
+    obj->~PipelineObject();
+    state_->pipelines.release(obj);
 }
 
 void Renderer::clearBuffers()
@@ -475,7 +503,7 @@ void Renderer::clearBuffers()
 
 void Renderer::swapBuffers()
 {
-    SDL_GL_SwapWindow(WindowLocator::get()->rawWindow());
+    SDL_GL_SwapWindow(WindowLocator::get()->ptr());
 }
 
 }
