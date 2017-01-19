@@ -28,14 +28,15 @@ public:
     usize size() const { return size_; }
 
 private:
-    struct Element
+    struct Element alignas(8)
     {
         union
         {
             Element* next;
-            T object;
+            u8 buffer[sizeof(T)];
         };
     };
+
     Buffer<Element> buffer_;
     usize size_;
     Element* head_;
@@ -82,12 +83,12 @@ T* ObjectPool<T, N>::create(Args&&... args)
     T* obj = nullptr;
     if (head_)
     {
-        obj = &head_->object;
+        obj = reinterpret_cast<T*>(&head_->buffer[0]);
         head_ = head_->next;
     }
     else
     {
-        obj = &buffer_.at(size_)->object;
+        obj = reinterpret_cast<T*>(&buffer_.at(size_)->buffer[0]);
     }
 
     new (obj) T{ std::forward<Args>(args)... };
@@ -100,6 +101,7 @@ template<typename T, usize N>
 void ObjectPool<T, N>::release(T* obj)
 {
     NLRS_ASSERT(size_ > 0);
+    obj->~T();
     Element* elem = reinterpret_cast<Element*>(obj);
     elem->next = head_;
     head_ = elem;
