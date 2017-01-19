@@ -101,7 +101,7 @@ SUITE(ObjectPoolTest)
         pool.create();
         pool.create();
         pool.create();
-        CHECK_EQUAL(nullptr, pool.create());
+        CHECK_EQUAL((int*)nullptr, pool.create());
     }
 }
 
