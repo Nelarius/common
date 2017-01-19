@@ -411,7 +411,7 @@ void Array<T>::clear()
     size_ = 0u;
 }
 
-template<typename T, usize N, usize Alignment = alignof(T)>
+template<typename T, usize N>
 class StaticArray
 {
 public:
@@ -459,15 +459,15 @@ public:
     usize pushBack(T&&);
 
     std::size_t size() const { return size_; }
-    constexpr std::size_t maxSize() const { return N; }
+    std::size_t maxSize() const { return N; }
 
 private:
-    typename std::aligned_storage<sizeof(T), Alignment>::type storage_[N];
+    typename std::aligned_storage<sizeof(T), alignof(T)>::type storage_[N];
     std::size_t size_{ 0u };
 };
 
-template<typename T, usize N, usize Alignment>
-StaticArray<T, N, Alignment>::StaticArray(std::initializer_list<T> list)
+template<typename T, usize N>
+StaticArray<T, N>::StaticArray(std::initializer_list<T> list)
     : storage_{ 0 }
 {
     NLRS_ASSERT(list.size() <= N);
@@ -477,8 +477,8 @@ StaticArray<T, N, Alignment>::StaticArray(std::initializer_list<T> list)
     }
 }
 
-template<typename T, usize N, usize Alignment>
-StaticArray<T, N, Alignment>::~StaticArray()
+template<typename T, usize N>
+StaticArray<T, N>::~StaticArray()
 {
     for (usize i = 0u; i < size_; ++i)
     {
@@ -486,98 +486,98 @@ StaticArray<T, N, Alignment>::~StaticArray()
     }
 }
 
-template<typename T, usize N, usize Alignment>
-T& StaticArray<T, N, Alignment>::at(usize i)
+template<typename T, usize N>
+T& StaticArray<T, N>::at(usize i)
 {
     return const_cast<T&>(static_cast<const StaticArray*>(this)->at(i));
 }
 
-template<typename T, usize N, usize Alignment>
-const T& StaticArray<T, N, Alignment>::at(usize i) const
+template<typename T, usize N>
+const T& StaticArray<T, N>::at(usize i) const
 {
     NLRS_ASSERT(i < size_);
     NLRS_ASSERT(size_ <= N);
     return *(ptr() + i);
 }
 
-template<typename T, usize N, usize Alignment>
-T& StaticArray<T, N, Alignment>::operator[](usize i)
+template<typename T, usize N>
+T& StaticArray<T, N>::operator[](usize i)
 {
     return at(i);
 }
 
-template<typename T, usize N, usize Alignment>
-const T& StaticArray<T, N, Alignment>::operator[](usize i) const
+template<typename T, usize N>
+const T& StaticArray<T, N>::operator[](usize i) const
 {
     return at(i);
 }
 
-template<typename T, usize N, usize Alignment>
-typename StaticArray<T, N, Alignment>::Iterator StaticArray<T, N, Alignment>::begin()
+template<typename T, usize N>
+typename StaticArray<T, N>::Iterator StaticArray<T, N>::begin()
 {
     NLRS_ASSERT(size_ <= N);
     return ptr();
 }
 
-template<typename T, usize N, usize Alignment>
-typename StaticArray<T, N, Alignment>::Iterator StaticArray<T, N, Alignment>::end()
+template<typename T, usize N>
+typename StaticArray<T, N>::Iterator StaticArray<T, N>::end()
 {
     NLRS_ASSERT(size_ <= N);
     return (T*)(ptr() + size_);
 }
 
-template<typename T, usize N, usize Alignment>
-typename StaticArray<T, N, Alignment>::ConstIterator StaticArray<T, N, Alignment>::begin() const
+template<typename T, usize N>
+typename StaticArray<T, N>::ConstIterator StaticArray<T, N>::begin() const
 {
     NLRS_ASSERT(size_ <= N);
     return ptr();
 }
 
-template<typename T, usize N, usize Alignment>
-typename StaticArray<T, N, Alignment>::ConstIterator StaticArray<T, N, Alignment>::end() const
+template<typename T, usize N>
+typename StaticArray<T, N>::ConstIterator StaticArray<T, N>::end() const
 {
     NLRS_ASSERT(size_ <= N);
     return (const T*)(ptr() + size_);
 }
 
-template<typename T, usize N, usize Alignment>
-typename StaticArray<T, N, Alignment>::RIterator StaticArray<T, N, Alignment>::rbegin()
+template<typename T, usize N>
+typename StaticArray<T, N>::RIterator StaticArray<T, N>::rbegin()
 {
     NLRS_ASSERT(size_ <= N);
     return RIterator(reinterpret_cast<T*>(&storage_[size_ - 1u]));
 }
 
-template<typename T, usize N, usize Alignment>
-typename StaticArray<T, N, Alignment>::RIterator StaticArray<T, N, Alignment>::rend()
+template<typename T, usize N>
+typename StaticArray<T, N>::RIterator StaticArray<T, N>::rend()
 {
     NLRS_ASSERT(size_ <= N);
     return RIterator(reinterpret_cast<T*>(&storage_[0u]) - 1u);
 }
 
-template<typename T, usize N, usize Alignment>
-typename StaticArray<T, N, Alignment>::ConstRIterator StaticArray<T, N, Alignment>::rbegin() const
+template<typename T, usize N>
+typename StaticArray<T, N>::ConstRIterator StaticArray<T, N>::rbegin() const
 {
     NLRS_ASSERT(size_ <= N);
     return ConstRIterator(reinterpret_cast<const T*>(&storage_[size_ - 1u]));
 }
 
-template<typename T, usize N, usize Alignment>
-typename StaticArray<T, N, Alignment>::ConstRIterator StaticArray<T, N, Alignment>::rend() const
+template<typename T, usize N>
+typename StaticArray<T, N>::ConstRIterator StaticArray<T, N>::rend() const
 {
     NLRS_ASSERT(size_ <= N);
     return ConstRIterator(ptr() - 1u);
 }
 
-template<typename T, usize N, usize Alignment>
-usize StaticArray<T, N, Alignment>::pushBack(const T& elem)
+template<typename T, usize N>
+usize StaticArray<T, N>::pushBack(const T& elem)
 {
     NLRS_ASSERT(size_ < N);
     new (ptr() + size_) T(elem);
     return size_++;
 }
 
-template<typename T, usize N, usize Alignment>
-usize StaticArray<T, N, Alignment>::pushBack(T&& elem)
+template<typename T, usize N>
+usize StaticArray<T, N>::pushBack(T&& elem)
 {
     NLRS_ASSERT(size_ < N);
     new (ptr() + size_) T(std::move(elem));
