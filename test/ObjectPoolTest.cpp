@@ -26,7 +26,7 @@ SUITE(ObjectPoolTest)
             : pool(SystemAllocator::getInstance())
         {}
 
-            ObjectPool<TestObject, 4> pool;
+        ObjectPool<TestObject, 4> pool;
     };
 
     TEST_FIXTURE(ObjectPoolWithAllocator, AfterInitializationSizeIsZero)
@@ -93,6 +93,15 @@ SUITE(ObjectPoolTest)
         pool.release(obj);
         obj = pool.create(128u, u8(3u));
         CHECK_EQUAL(ptr, obj);
+    }
+
+    TEST(PoolReturnsNullAtMaxCapacity)
+    {
+        ObjectPool<int, 3> pool(SystemAllocator::getInstance());
+        pool.create();
+        pool.create();
+        pool.create();
+        CHECK_EQUAL(nullptr, pool.create());
     }
 }
 

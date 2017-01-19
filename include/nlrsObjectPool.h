@@ -75,7 +75,10 @@ template<typename T, usize N>
 template<typename... Args>
 T* ObjectPool<T, N>::create(Args&&... args)
 {
-    NLRS_ASSERT(size_ < buffer_.capacity());
+    if (size_ == buffer_.capacity())
+    {
+        return nullptr;
+    }
     T* obj = nullptr;
     if (head_)
     {
