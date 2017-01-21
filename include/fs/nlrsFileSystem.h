@@ -406,8 +406,8 @@ public:
 
     inline DirectoryIterator& operator++()
     {
-        NARWHAL_ASSERT(directory_);
-        NARWHAL_ASSERT(entry_);
+        NLRS_ASSERT(directory_);
+        NLRS_ASSERT(entry_);
         if ((entry_ = readdir(directory_)) == NULL)
         {
             release_();
@@ -421,7 +421,7 @@ public:
     {
         if (entry_ && rhs.entry_)
         {
-            NARWHAL_ASSERT(entry_);
+            NLRS_ASSERT(entry_);
             return std::strcmp(entry_->d_name, rhs.entry_->d_name) == 0;
         }
         // see if both are null (end iterator)
@@ -435,8 +435,8 @@ public:
 
     inline Path operator*()
     {
-        NARWHAL_ASSERT(directory_);
-        NARWHAL_ASSERT(entry_);
+        NLRS_ASSERT(directory_);
+        NLRS_ASSERT(entry_);
         return Path(entry_->d_name);
     }
 

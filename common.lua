@@ -4,7 +4,10 @@ function project_test(location)
     kind "ConsoleApp"
     language "C++"
     targetdir "bin"
-    files { location.."/common/test/**.cpp", location.."/common/src/nlrsAllocator.cpp" }
+    files {
+        location.."/common/test/**.cpp",
+        location.."/common/src/nlrsAllocator.cpp",
+        location.."/common/src/nlrsFileSentry.cpp" }
     includedirs { location.."/common/extern/unittest++", location.."/common/include" }
     debugdir "bin"
     filter "action:vs*"
@@ -27,7 +30,11 @@ function project_common(location)
     language "C++"
     targetdir "lib"
     includedirs { location.."/common/include/" }
-    files { location.."/common/include/**.h", location.."/common/src/nlrsAllocator.cpp" }
+    files {
+        location.."/common/include/**.h",
+        location.."/common/src/nlrsAllocator.cpp",
+        location.."/common/src/nlrsFileSentry.cpp"
+    }
 end
 
 function project_window(location, sdl_include)
