@@ -275,6 +275,9 @@ struct Renderer::RenderState
     SDL_GLContext context;
     ObjectPool<PipelineObject> pipelines;
     ObjectPool<DrawStateOptions> drawStates;
+
+    RenderState() = default;
+    ~RenderState() = default;
 };
 
 Renderer::Renderer()
@@ -296,6 +299,8 @@ Renderer::~Renderer()
     {
         SDL_GL_DeleteContext(state_->context);
     }
+
+    state_->~RenderState();
     HeapAllocatorLocator::get()->free(state_);
     state_ = nullptr;
 }
