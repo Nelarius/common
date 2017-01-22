@@ -13,9 +13,10 @@ public:
     UniformDistribution() = default;
     ~UniformDistribution() = default;
 
-    T operator()(std::minstd_rand generator, T a, T b)
+    T operator()(std::minstd_rand& generator, T a, T b)
     {
-        return distr_(generator, std::uniform_int_distribution<T>::param_type(a, b));
+        using param_t = typename decltype(distr_)::param_type;
+        return distr_(generator, param_t(a, b));
     }
 
 private:
@@ -29,9 +30,10 @@ public:
     UniformDistribution() = default;
     ~UniformDistribution() = default;
 
-    T operator()(std::minstd_rand generator, T a, T b)
+    T operator()(std::minstd_rand& generator, T a, T b)
     {
-        return distr_(generator, std::uniform_real_distribution<T>::param_type(a, b));
+        using param_t = typename decltype(distr_)::param_type;
+        return distr_(generator, param_t(a, b));
     }
 
 private:

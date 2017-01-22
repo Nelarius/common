@@ -105,9 +105,7 @@ public:
     {
         Add,
         Subtract,
-        ReverseSubtract,
-        Min,
-        Max
+        ReverseSubtract
     };
 
     struct PipelineOptions

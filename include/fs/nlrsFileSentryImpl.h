@@ -211,7 +211,7 @@ public:
         // TODO
     }
 
-    FileSentry::Handle addSentry(const Path& directory, FileSentry::EventCallback eventHandle)
+    FileSentry::Handle addSentry(const Path& directory, FileSentry::EventCallback eventHandle, bool recursive)
     {
         // TODO
         return FileSentry::InvalidHandle;
@@ -243,7 +243,7 @@ public:
         // TODO
     }
 
-    FileSentry::Handle addSentry(const Path& directory, FileSentry::EventCallback eventHandle)
+    FileSentry::Handle addSentry(const Path& directory, FileSentry::EventCallback eventHandle, bool recursive)
     {
         // TODO
         return FileSentry::InvalidHandle;

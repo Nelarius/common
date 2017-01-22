@@ -5,6 +5,8 @@
 #include "nlrsAssert.h"
 #include "nlrsBuffer.h"
 
+#include <utility>
+
 namespace nlrs
 {
 
@@ -28,7 +30,7 @@ public:
     usize size() const { return size_; }
 
 private:
-    struct Element alignas(8)
+    struct alignas(8) Element
     {
         union
         {
