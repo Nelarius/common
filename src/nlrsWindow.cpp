@@ -15,6 +15,8 @@ SdlWindow::~SdlWindow()
 
 bool SdlWindow::initialize(const Options& opts)
 {
+    size_ = Vec2i(opts.width, opts.height);
+
     static_assert(Resizable == SDL_WINDOW_RESIZABLE, "Invalid Window::Flag value");
     static_assert(Opengl == SDL_WINDOW_OPENGL, "Invalid Window::Flag value");
     NLRS_ASSERT(window_ == nullptr);
@@ -26,7 +28,7 @@ bool SdlWindow::initialize(const Options& opts)
         opts.flags
     );
 
-    if (window_ == NULL)
+    if (window_ == nullptr)
     {
         return false;
     }

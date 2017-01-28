@@ -2,6 +2,7 @@
 
 #include "nlrsAliases.h"
 #include "nlrsLocator.h"
+#include "nlrsVector.h"
 
 #include <string>
 
@@ -38,9 +39,11 @@ public:
     bool initialize(const Options& opts);
 
     inline SDL_Window* ptr() { return window_; }
+    inline Vec2i size() const { return size_; }
 
 private:
-    SDL_Window*     window_{ nullptr };
+    SDL_Window* window_{ nullptr };
+    Vec2i size_{ 0, 0 };
 };
 
 using WindowLocator = Locator<SdlWindow>;
