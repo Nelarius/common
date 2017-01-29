@@ -78,7 +78,7 @@ template<typename T>
 struct Direction
 {
     Direction()
-        : v(0.f, 0.f, 0.f, 0.f)
+        : v(T(0.f), T(0.f), T(0.f), T(0.f))
     {}
 
     Direction(T x, T y, T z)
@@ -219,7 +219,7 @@ template<typename T>
 struct Point
 {
     Point()
-        : (0.f, 0.f, 0.f, 1.f)
+        : v(T(0.f), T(0.f), T(0.f), T(1.f))
     {}
 
     Point(T x, T y, T z)

@@ -3,6 +3,7 @@
 #include "nlrsAssert.h"
 #include "nlrsVector.h"
 #include "nlrsQuaternion.h"
+#include "nlrsGeometry.h"
 #include <sstream>
 #include <ctime>
 #include <cctype>   // for isspace
@@ -37,6 +38,13 @@ template<typename T>
 std::ostream& operator<<(std::ostream& os, const Quaternion<T>& q)
 {
     os << "[(" << q.v.x << ", " << q.v.y << ", " << q.v.z << "), " << q.w << "]";
+    return os;
+}
+
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const Bounds2<T>& b)
+{
+    os << "(min: " << b.min << ", " << "max: " << b.max << ")";
     return os;
 }
 
