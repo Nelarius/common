@@ -30,11 +30,11 @@ class Path
 public:
 
     // TODO: make this an enum class?
-    enum class PathType
+    enum class Type
     {
         Windows,
         Posix,
-#if defined(_WIN32)
+#if NLRS_PLATFORM == NLRS_WIN32
         Native = Windows
 #else
         Native = Posix
@@ -43,60 +43,62 @@ public:
 
     Path()
         : path_(),
-        type_(PathType::Native),
+        type_(Type::Native),
         absolute_(false)
     {}
 
     Path(const std::string& path)
         : path_(),
-        type_(PathType::Native),
+        type_(Type::Native),
         absolute_(false)
     {
-        if (path.find_first_of("\\", 0) != std::string::npos)
-        {
-            type_ = PathType::Windows;
-        }
-        else if (path.find_first_of('/', 0) != std::string::npos)
-        {
-            type_ = PathType::Posix;
-        }
-        set_(path, type_);
+        parseTypeAndSet_(path);
     }
 
     Path(const char* path)
         : path_(),
-        type_(PathType::Native),
+        type_(Type::Native),
         absolute_(false)
     {
-        std::string p(path);
-        if (p.find_first_of("\\", 0) != std::string::npos)
-        {
-            type_ = PathType::Windows;
-        }
-        else if (p.find_first_of('/', 0) != std::string::npos)
-        {
-            type_ = PathType::Posix;
-        }
-        set_(p, type_);
+        parseTypeAndSet_(path);
     }
 
-    Path(const std::string& path, PathType type)
+    Path(const wchar_t* path)
+        : path_(),
+        type_(Type::Native),
+        absolute_(false)
+    {
+        // this constructor is intended for use on windows, where path strings
+        // are stored in utf-16 format
+        // convert here to utf-8
+        std::string p;
+        p.resize(260);
+        std::string::size_type len = static_cast<std::size_t>(-1);
+        if ((len = std::wcstombs(&p[0], path, 260)) == static_cast<std::size_t>(-1))
+        {
+            throw std::runtime_error("Path constructor: failed to convert path to multibyte representation");
+        }
+        p.resize(len);
+        parseTypeAndSet_(p);
+    }
+
+    Path(const std::string& path, Type type)
         : path_(),
         type_(type),
         absolute_(false)
     {
-        NLRS_ASSERT(path.find_first_of((type_ == PathType::Windows ? "/" : "\\"), 0) == std::string::npos);
-        set_(path, type_);
+        NLRS_ASSERT(path.find_first_of((type_ == Type::Windows ? "/" : "\\"), 0) == std::string::npos);
+        set_(path);
     }
 
-    Path(const char* path, PathType type)
+    Path(const char* path, Type type)
         : path_(),
         type_(type),
         absolute_(false)
     {
         std::string p(path);
-        NLRS_ASSERT(p.find_first_of((type_ == PathType::Windows ? "/" : "\\"), 0) == std::string::npos);
-        set_(p, type_);
+        NLRS_ASSERT(p.find_first_of((type_ == Type::Windows ? "/" : "\\"), 0) == std::string::npos);
+        set_(p);
     }
 
     Path(const Path& other)
@@ -135,12 +137,16 @@ public:
         return *this;
     }
 
-    void append(const char* path)
+    void append(const Path& path)
     {
-        auto tokens = tokenize_(path, type_ == PathType::Windows ? "\\" : "/");
-        for (const auto& t : tokens)
+        if (path.isAbsolute())
         {
-            path_.push_back(t);
+            throw std::runtime_error("Path.append: appending absolute paths is an error");
+        }
+        for (auto& token : path.path_)
+        {
+            NLRS_ASSERT(token[0] != '.');
+            path_.push_back(token);
         }
     }
 
@@ -151,11 +157,13 @@ public:
 
     bool isAbsolute() const { return absolute_; }
 
-    std::string string(PathType type = PathType::Native) const
+    bool isRelative() const { return !absolute_; }
+
+    std::string string(Type type = Type::Native) const
     {
         std::ostringstream ss;
 
-        if (type_ == PathType::Posix && absolute_)
+        if (type_ == Type::Posix && absolute_)
         {
             ss << '/';
         }
@@ -165,7 +173,7 @@ public:
             ss << path_[i];
             if (i + 1u < path_.size())
             {
-                if (type_ == PathType::Posix)
+                if (type_ == Type::Posix)
                 {
                     ss << '/';
                 }
@@ -180,7 +188,7 @@ public:
     }
 
 #if NLRS_PLATFORM == NLRS_WIN32
-    std::wstring wstring(PathType type = PathType::Native) const
+    std::wstring wstring(Type type = Type::Native) const
     {
         std::string temp = string(type);
         int size = MultiByteToWideChar(CP_UTF8, 0, &temp[0], (int)temp.size(), NULL, 0);
@@ -191,8 +199,25 @@ public:
 #endif
 
 protected:
-    static std::vector<std::string> tokenize_(const std::string& str, std::string delim)
+    static std::vector<std::string> tokenize_(const std::string& str, Type type)
     {
+        std::string delim;
+        if (type == Type::Windows)
+        {
+            delim = "\\";
+        }
+        else if (type == Type::Posix)
+        {
+            delim = "/";
+        }
+        else
+        {
+#if NLRS_PLATFORM == NLRS_WIN32
+            delim = "\\";
+#else
+            delim = "/";
+#endif
+        }
         std::string::size_type lastPos = 0;
         std::string::size_type pos = str.find_first_of(delim, lastPos);
         std::vector<std::string> tokens;
@@ -214,26 +239,37 @@ protected:
         return tokens;
     }
 
-    void set_(const std::string& p, PathType type)
+    void set_(const std::string& p)
     {
-        type_ = type;
-        if (type_ == PathType::Windows)
+        if (p.size() >= 2 && std::isalpha(p[0]) && p[1] == ':')
         {
-            absolute_ = p.size() >= 2 && std::isalpha(p[0]) && p[1] == ':';
-            path_ = tokenize_(p, "\\");
+            absolute_ = true;
         }
-        else
+        else if (!p.empty() && p[0] == '/')
         {
-            absolute_ = !p.empty() && p[0] == '/';
-            path_ = tokenize_(p, "/");
+            absolute_ = true;
         }
+        path_ = tokenize_(p, type_);
+    }
+
+    void parseTypeAndSet_(const std::string& p)
+    {
+        if (p.find_first_of("\\", 0) != std::string::npos)
+        {
+            type_ = Type::Windows;
+        }
+        else if (p.find_first_of('/', 0) != std::string::npos)
+        {
+            type_ = Type::Posix;
+        }
+        set_(p);
     }
 
     // TODO: windows widestring variant of set_
 
-    std::vector<std::string>    path_;
-    PathType                    type_;
-    bool                        absolute_;
+    std::vector<std::string> path_;
+    Type                     type_;
+    bool                     absolute_;
 };
 
 }

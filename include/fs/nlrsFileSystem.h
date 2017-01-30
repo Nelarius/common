@@ -14,6 +14,8 @@
 #include <dirent.h>
 #include <unistd.h> // standard symbols and constants
 #include <ftw.h>    // file tree traversal
+#include <limits.h>
+#include <stdlib.h>
 #endif
 #include <sys/stat.h>
 
@@ -23,6 +25,32 @@ namespace nlrs
 {
 namespace fs
 {
+
+inline Path absolute(const Path& p)
+{
+    if (p.isAbsolute())
+    {
+        return p;
+    }
+#if NLRS_PLATFORM == NLRS_WIN32
+    static_assert(UNICODE == 1, "Unicode not enabled");
+    wchar_t buffer[MAX_PATH];
+    auto path = p.wstring();
+    if (GetFullPathNameW(path.c_str(), MAX_PATH, &buffer[0], nullptr) == 0u)
+    {
+        throw std::runtime_error("absolute: GetFullPathNameW failed");
+    }
+    return Path(buffer);
+#else
+    char buffer[260];
+    auto path = p.string();
+    if (realpath(path.c_str(), buffer) == nullptr)
+    {
+        throw std::runtime_error("absolute: realpath failed");
+    }
+    return Path(buffer);
+#endif
+}
 
 inline bool exists(const Path& p)
 {
@@ -116,7 +144,6 @@ inline int unlinkEntry(const char *fpath, const struct stat *sb, int typeflag, s
 #if NLRS_PLATFORM == NLRS_WIN32
 inline bool removeDirectoryContentIteratively(const Path& path)
 {
-
     WIN32_FIND_DATAW fileData = { 0 };
     HANDLE file = INVALID_HANDLE_VALUE;
 
@@ -134,21 +161,20 @@ inline bool removeDirectoryContentIteratively(const Path& path)
     {
         do
         {
-            // MAX_PATH is 260 for wchar and char
-            char multibyteName[261] = { 0 };
+            char multibyteName[MAX_PATH] = { 0 };
             if ((fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
             {
                 if (fileData.cFileName[0] == '.')
                 {
                     continue;
                 }
-                wcstombs(multibyteName, fileData.cFileName, 260);
+                std::wcstombs(multibyteName, fileData.cFileName, MAX_PATH);
                 removeDirectoryContentIteratively(Path(multibyteName));
             }
             else
             {
                 Path filePath = path;
-                wcstombs(multibyteName, fileData.cFileName, 260);
+                std::wcstombs(multibyteName, fileData.cFileName, MAX_PATH);
                 filePath.append(multibyteName);
                 int res = DeleteFileW(filePath.wstring().c_str());
             }

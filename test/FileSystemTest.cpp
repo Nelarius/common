@@ -46,6 +46,71 @@ SUITE(FileSystemTest) {
         CHECK(fs::removeDirectory("test_dir"));
         CHECK(!fs::exists("test_dir"));
     }
+
+    TEST(WindowsAbsolutePathIsAbsolute)
+    {
+        fs::Path p1("C:\\test");
+        CHECK(p1.isAbsolute());
+        CHECK(!p1.isRelative());
+
+        fs::Path p2("C:");
+        CHECK(p2.isAbsolute());
+        CHECK(!p2.isRelative());
+
+        fs::Path p3("C:/test");
+        CHECK(p3.isAbsolute());
+        CHECK(!p3.isRelative());
+    }
+
+    TEST(PosixAbsolutePathIsAbsolute)
+    {
+        fs::Path p1("/bin/test");
+        CHECK(p1.isAbsolute());
+        CHECK(!p1.isRelative());
+
+        fs::Path p2("/usr/");
+        CHECK(p2.isAbsolute());
+        CHECK(!p2.isRelative());
+    }
+
+    TEST(WindowsRelativePathIsRelative)
+    {
+        fs::Path p1("test\\");
+        CHECK(p1.isRelative());
+        CHECK(!p1.isAbsolute());
+
+        fs::Path p2(".\\");
+        CHECK(p2.isRelative());
+        CHECK(!p2.isAbsolute());
+
+        fs::Path p3("..\\test\\");
+        CHECK(p3.isRelative());
+        CHECK(!p3.isAbsolute());
+    }
+
+    TEST(PosixRelativePathIsRelative)
+    {
+        fs::Path p1("test");
+        CHECK(p1.isRelative());
+        CHECK(!p1.isAbsolute());
+
+        fs::Path p2("./");
+        CHECK(p2.isRelative());
+        CHECK(!p2.isAbsolute());
+
+        fs::Path p3("../test/");
+        CHECK(p3.isRelative());
+        CHECK(!p3.isAbsolute());
+    }
+
+    TEST(AbsolutePathConversionTest)
+    {
+        fs::Path p("./");
+        CHECK(p.isRelative());
+
+        auto absPath = fs::absolute(p);
+        CHECK(absPath.isAbsolute());
+    }
 }
 
 }
