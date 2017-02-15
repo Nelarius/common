@@ -72,6 +72,16 @@ struct Bounds2
     {
         return max - min;
     }
+
+    bool contains(const Vector2<T>& p)
+    {
+        if (p.x > min.x && p.x < max.x && p.y > min.y && p.y < max.y)
+        {
+            return true;
+        }
+
+        return false;
+    }
 };
 
 template<typename T>
