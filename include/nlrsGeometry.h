@@ -53,6 +53,12 @@ struct Bounds2
         max(mx)
     {}
 
+    template<typename U>
+    Bounds2<U> cast() const
+    {
+        return Bounds2<U>{ min.cast<U>(), max.cast<U>() };
+    }
+
     bool operator==(const Bounds2<T>& rhs) const
     {
         return min == rhs.min && max == rhs.max;
@@ -81,6 +87,18 @@ struct Bounds2
         }
 
         return false;
+    }
+
+    Bounds2<T> shrink(T value) const
+    {
+        NLRS_ASSERT(max.x - min.x > value);
+        NLRS_ASSERT(max.y - min.y > value);
+        return Bounds2<T>{ Vector2<T>{ min.x + value, min.y + value }, Vector2<T>{ max.x - value, max.y - value } };
+    }
+
+    Bounds2<T> inflate(T value) const
+    {
+        return Bounds2<T>{ Vector2<T>{ min.x - value, min.y - value}, Vector2<T>{ max.x + value, max.y + value } };
     }
 };
 
