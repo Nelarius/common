@@ -68,12 +68,24 @@ private:
     T* ptr_;
 };
 
+
+
 template<typename T, typename... Args>
 ScopedPtr<T> makeScopedPtr(IAllocator& allocator, Args&&... args)
 {
     void* mem = allocator.allocate(sizeof(T), alignof(T));
     T* obj = new (mem) T{ std::forward<Args>(args)... };
+
     return ScopedPtr<T>(allocator, obj);
+}
+
+template<typename Base, typename Derived, typename... Args>
+ScopedPtr<Base> makeScopedPtrForBaseClass(IAllocator& allocator, Args&&... args)
+{
+    void* mem = allocator.allocate(sizeof(Derived), alignof(Derived));
+    Derived* obj = new (mem) Derived{ std::forward<Args>(args)... };
+
+    return ScopedPtr<Base>(allocator, dynamic_cast<Base*>(obj));
 }
 
 }
