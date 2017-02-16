@@ -58,6 +58,11 @@ public:
         return *ptr_;
     }
 
+    T* get()
+    {
+        return ptr_;
+    }
+
 private:
     IAllocator& allocator_;
     T* ptr_;
