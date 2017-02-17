@@ -56,7 +56,7 @@ struct Bounds2
     template<typename U>
     Bounds2<U> cast() const
     {
-        return Bounds2<U>{ min.cast<U>(), max.cast<U>() };
+        return Bounds2<U>{ min.template cast<U>(), max.template cast<U>() };
     }
 
     bool operator==(const Bounds2<T>& rhs) const
