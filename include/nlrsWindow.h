@@ -16,8 +16,9 @@ class SdlWindow
 public:
     enum Flags
     {
-        Opengl = 2u,
-        Resizable = 32u
+        Opengl = 2,
+        Resizable = 32,
+        HighDpi = 8192
     };
 
     struct Options
@@ -25,10 +26,10 @@ public:
         std::string name{ "nlrs" };
         int width{ 1000 };
         int height{ 800 };
-        u32 flags{ Resizable | Opengl };
+        u32 flags{ Resizable | Opengl | HighDpi };
     };
 
-    SdlWindow() = default;
+    SdlWindow();
     ~SdlWindow();
 
     SdlWindow(const SdlWindow&) = delete;
@@ -42,8 +43,8 @@ public:
     inline Vec2i size() const { return size_; }
 
 private:
-    SDL_Window* window_{ nullptr };
-    Vec2i size_{ 0, 0 };
+    SDL_Window* window_;
+    Vec2i size_;
 };
 
 using WindowLocator = Locator<SdlWindow>;
