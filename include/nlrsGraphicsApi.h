@@ -9,7 +9,7 @@ namespace nlrs
 {
 
 // TODO: pass window parameter explicitly
-class Renderer
+class GraphicsApi
 {
 public:
     using BufferInfo = u64;
@@ -145,13 +145,13 @@ public:
         int msSamples{ 4 };
     };
 
-    Renderer();
-    ~Renderer();
+    GraphicsApi();
+    ~GraphicsApi();
 
-    Renderer(const Renderer&) = delete;
-    Renderer(Renderer&&) = delete;
-    Renderer& operator=(const Renderer&) = delete;
-    Renderer& operator=(Renderer&&) = delete;
+    GraphicsApi(const GraphicsApi&) = delete;
+    GraphicsApi(GraphicsApi&&) = delete;
+    GraphicsApi& operator=(const GraphicsApi&) = delete;
+    GraphicsApi& operator=(GraphicsApi&&) = delete;
 
     bool initialize(const Options& options);
 
@@ -159,7 +159,7 @@ public:
     BufferInfo makeBuffer(const BufferOptions& opts, const Array<T>& data)
     {
         NLRS_ASSERT(data.size() != 0u);
-        return makeBufferWithData_(opts, data.data(), sizeof(T), data.size());
+        return makeBufferWithData(opts, data.data(), sizeof(T), data.size());
     }
     // release a buffer object created with makeBuffer
     // if the buffer object is invalid, then this does nothing
@@ -189,13 +189,13 @@ public:
     void swapBuffers();
 
 private:
-    BufferInfo makeBufferWithData_(const BufferOptions& options, const void* data, usize elementSize, usize elementCount);
+    BufferInfo makeBufferWithData(const BufferOptions& options, const void* data, usize elementSize, usize elementCount);
 
     struct RenderState;
 
     RenderState*    state_;
 };
 
-using RendererLocator = Locator<Renderer>;
+using GraphicsApiLocator = Locator<GraphicsApi>;
 
 }
