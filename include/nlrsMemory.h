@@ -2,6 +2,8 @@
 
 #include "nlrsAllocator.h"
 
+#include <utility>
+
 namespace nlrs
 {
 
@@ -67,8 +69,6 @@ private:
     IAllocator& allocator_;
     T* ptr_;
 };
-
-
 
 template<typename T, typename... Args>
 ScopedPtr<T> makeScopedPtr(IAllocator& allocator, Args&&... args)
