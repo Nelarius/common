@@ -55,12 +55,27 @@ public:
         return ptr_;
     }
 
+    const T* operator->() const
+    {
+        return ptr_;
+    }
+
     T& operator*()
     {
         return *ptr_;
     }
 
+    const T& operator*() const
+    {
+        return *ptr_;
+    }
+
     T* get()
+    {
+        return ptr_;
+    }
+
+    const T* get() const
     {
         return ptr_;
     }

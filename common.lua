@@ -7,7 +7,9 @@ function project_test(location)
     files {
         location.."/common/test/**.cpp",
         location.."/common/src/nlrsAllocator.cpp",
-        location.."/common/src/nlrsFileSentry.cpp" }
+        location.."/common/src/nlrsFileSentry.cpp",
+        location.."/common/src/nlrsFileSystem.cpp",
+        location.."/common/src/nlrsPath.cpp" }
     includedirs { location.."/common/extern/unittest++", location.."/common/include" }
     debugdir "bin"
     filter "action:vs*"
@@ -33,7 +35,9 @@ function project_common(location)
     files {
         location.."/common/include/**.h",
         location.."/common/src/nlrsAllocator.cpp",
-        location.."/common/src/nlrsFileSentry.cpp"
+        location.."/common/src/nlrsFileSentry.cpp",
+        location.."/common/src/nlrsFileSystem.cpp",
+        location.."/common/src/nlrsPath.cpp"
     }
 end
 
