@@ -1,4 +1,4 @@
-#include "nlrsRenderer.h"
+#include "nlrsGraphicsApi.h"
 #include "nlrsWindow.h"
 #include "nlrsAliases.h"
 #include "nlrsAllocator.h"
@@ -21,7 +21,7 @@ struct GlBufferObject
     nlrs::u32 buffer;
     nlrs::i32 target;
 
-    operator nlrs::Renderer::BufferInfo() const
+    operator nlrs::GraphicsApi::BufferInfo() const
     {
         return *reinterpret_cast<const nlrs::u64*>(this);
     }
@@ -38,56 +38,56 @@ struct GlAttribute
 
 struct PipelineObject
 {
-    nlrs::Renderer::ShaderInfo   shader;
+    nlrs::GraphicsApi::ShaderInfo   shader;
     nlrs::Array<GlAttribute>     layout;
     bool depthTestEnabled;
     bool cullingEnabled;
     bool scissorTestEnabled;
     bool blendEnabled;
-    nlrs::Renderer::ComparisonFunction depthComparisonFunction;
-    nlrs::Renderer::BlendFunction blendFunction;
+    nlrs::GraphicsApi::ComparisonFunction depthComparisonFunction;
+    nlrs::GraphicsApi::BlendFunction blendFunction;
 };
 
-GLenum asGlBufferTarget(nlrs::Renderer::BufferType type)
+GLenum asGlBufferTarget(nlrs::GraphicsApi::BufferType type)
 {
     switch (type)
     {
-        case nlrs::Renderer::BufferType::Array:      return GL_ARRAY_BUFFER;
-        case nlrs::Renderer::BufferType::IndexArray: return GL_ELEMENT_ARRAY_BUFFER;
-        case nlrs::Renderer::BufferType::Uniform:    return GL_UNIFORM_BUFFER;
+        case nlrs::GraphicsApi::BufferType::Array:      return GL_ARRAY_BUFFER;
+        case nlrs::GraphicsApi::BufferType::IndexArray: return GL_ELEMENT_ARRAY_BUFFER;
+        case nlrs::GraphicsApi::BufferType::Uniform:    return GL_UNIFORM_BUFFER;
         default: NLRS_ASSERT(!"Unreachable"); return 0;
     }
 }
 
-GLenum asGlUsageHint(nlrs::Renderer::BufferUsageHint hint)
+GLenum asGlUsageHint(nlrs::GraphicsApi::BufferUsageHint hint)
 {
     switch (hint)
     {
-        case nlrs::Renderer::BufferUsageHint::StaticDraw:    return GL_STATIC_DRAW;
+        case nlrs::GraphicsApi::BufferUsageHint::StaticDraw:    return GL_STATIC_DRAW;
         default: NLRS_ASSERT(!"Unreachable");                return 0;
     }
 }
 
-GLenum asGlShaderType(nlrs::Renderer::ShaderType type)
+GLenum asGlShaderType(nlrs::GraphicsApi::ShaderType type)
 {
     switch (type)
     {
-        case nlrs::Renderer::ShaderType::Vertex:     return GL_VERTEX_SHADER;
-        case nlrs::Renderer::ShaderType::Fragment:   return GL_FRAGMENT_SHADER;
-        case nlrs::Renderer::ShaderType::Geometry:   return GL_GEOMETRY_SHADER;
-        case nlrs::Renderer::ShaderType::Compute:    return GL_COMPUTE_SHADER;
+        case nlrs::GraphicsApi::ShaderType::Vertex:     return GL_VERTEX_SHADER;
+        case nlrs::GraphicsApi::ShaderType::Fragment:   return GL_FRAGMENT_SHADER;
+        case nlrs::GraphicsApi::ShaderType::Geometry:   return GL_GEOMETRY_SHADER;
+        case nlrs::GraphicsApi::ShaderType::Compute:    return GL_COMPUTE_SHADER;
         default: NLRS_ASSERT(!"Unreachable"); return 0;
     }
 }
 
-nlrs::u32 asByteSize(nlrs::Renderer::AttributeType type)
+nlrs::u32 asByteSize(nlrs::GraphicsApi::AttributeType type)
 {
     switch (type)
     {
-        case nlrs::Renderer::AttributeType::Float1:  return 4u;
-        case nlrs::Renderer::AttributeType::Float2:  return 8u;
-        case nlrs::Renderer::AttributeType::Float3:  return 12u;
-        case nlrs::Renderer::AttributeType::Float4:  return 16u;
+        case nlrs::GraphicsApi::AttributeType::Float1:  return 4u;
+        case nlrs::GraphicsApi::AttributeType::Float2:  return 8u;
+        case nlrs::GraphicsApi::AttributeType::Float3:  return 12u;
+        case nlrs::GraphicsApi::AttributeType::Float4:  return 16u;
         default:
             NLRS_ASSERT(!"You shouldn't reach this");
             break;
@@ -95,14 +95,14 @@ nlrs::u32 asByteSize(nlrs::Renderer::AttributeType type)
     return 0u;
 }
 
-GLint asGlAttributeElementCount(nlrs::Renderer::AttributeType type)
+GLint asGlAttributeElementCount(nlrs::GraphicsApi::AttributeType type)
 {
     switch (type)
     {
-        case nlrs::Renderer::AttributeType::Float1:  return 1;
-        case nlrs::Renderer::AttributeType::Float2:  return 2;
-        case nlrs::Renderer::AttributeType::Float3:  return 3;
-        case nlrs::Renderer::AttributeType::Float4:  return 4;
+        case nlrs::GraphicsApi::AttributeType::Float1:  return 1;
+        case nlrs::GraphicsApi::AttributeType::Float2:  return 2;
+        case nlrs::GraphicsApi::AttributeType::Float3:  return 3;
+        case nlrs::GraphicsApi::AttributeType::Float4:  return 4;
         default:
             NLRS_ASSERT(!"You shouldn't reach this");
             break;
@@ -110,14 +110,14 @@ GLint asGlAttributeElementCount(nlrs::Renderer::AttributeType type)
     return 0;
 }
 
-GLenum asGlAttributeType(nlrs::Renderer::AttributeType type)
+GLenum asGlAttributeType(nlrs::GraphicsApi::AttributeType type)
 {
     switch (type)
     {
-        case nlrs::Renderer::AttributeType::Float1:
-        case nlrs::Renderer::AttributeType::Float2:
-        case nlrs::Renderer::AttributeType::Float3:
-        case nlrs::Renderer::AttributeType::Float4:  return GL_FLOAT;
+        case nlrs::GraphicsApi::AttributeType::Float1:
+        case nlrs::GraphicsApi::AttributeType::Float2:
+        case nlrs::GraphicsApi::AttributeType::Float3:
+        case nlrs::GraphicsApi::AttributeType::Float4:  return GL_FLOAT;
         default:
             NLRS_ASSERT(!"You shouldn't reach this");
             break;
@@ -125,30 +125,30 @@ GLenum asGlAttributeType(nlrs::Renderer::AttributeType type)
     return 0u;
 }
 
-GLenum asGlBlendMode(nlrs::Renderer::BlendFunction function)
+GLenum asGlBlendMode(nlrs::GraphicsApi::BlendFunction function)
 {
     switch(function)
     {
-        case nlrs::Renderer::BlendFunction::Add: return GL_FUNC_ADD;
-        case nlrs::Renderer::BlendFunction::Subtract: return GL_FUNC_SUBTRACT;
-        case nlrs::Renderer::BlendFunction::ReverseSubtract: return GL_FUNC_REVERSE_SUBTRACT;
+        case nlrs::GraphicsApi::BlendFunction::Add: return GL_FUNC_ADD;
+        case nlrs::GraphicsApi::BlendFunction::Subtract: return GL_FUNC_SUBTRACT;
+        case nlrs::GraphicsApi::BlendFunction::ReverseSubtract: return GL_FUNC_REVERSE_SUBTRACT;
     }
     NLRS_ASSERT(!"You shouldn't reach this");
     return 0;
 }
 
-GLenum asGlDepthFunc(nlrs::Renderer::ComparisonFunction function)
+GLenum asGlDepthFunc(nlrs::GraphicsApi::ComparisonFunction function)
 {
     switch(function)
     {
-        case nlrs::Renderer::ComparisonFunction::Never: return GL_NEVER;
-        case nlrs::Renderer::ComparisonFunction::Less: return GL_LESS;
-        case nlrs::Renderer::ComparisonFunction::Equal: return GL_EQUAL;
-        case nlrs::Renderer::ComparisonFunction::Lequal: return GL_LEQUAL;
-        case nlrs::Renderer::ComparisonFunction::Greater: return GL_GREATER;
-        case nlrs::Renderer::ComparisonFunction::NotEqual: return GL_NOTEQUAL;
-        case nlrs::Renderer::ComparisonFunction::Gequal: return GL_GEQUAL;
-        case nlrs::Renderer::ComparisonFunction::Always: return GL_ALWAYS;
+        case nlrs::GraphicsApi::ComparisonFunction::Never: return GL_NEVER;
+        case nlrs::GraphicsApi::ComparisonFunction::Less: return GL_LESS;
+        case nlrs::GraphicsApi::ComparisonFunction::Equal: return GL_EQUAL;
+        case nlrs::GraphicsApi::ComparisonFunction::Lequal: return GL_LEQUAL;
+        case nlrs::GraphicsApi::ComparisonFunction::Greater: return GL_GREATER;
+        case nlrs::GraphicsApi::ComparisonFunction::NotEqual: return GL_NOTEQUAL;
+        case nlrs::GraphicsApi::ComparisonFunction::Gequal: return GL_GEQUAL;
+        case nlrs::GraphicsApi::ComparisonFunction::Always: return GL_ALWAYS;
     }
     NLRS_ASSERT(!"You shouldn't reach this");
     return 0;
@@ -270,7 +270,7 @@ void debugCallback(
 namespace nlrs
 {
 
-struct Renderer::RenderState
+struct GraphicsApi::RenderState
 {
     SDL_GLContext context;
     ObjectPool<PipelineObject> pipelines;
@@ -280,7 +280,7 @@ struct Renderer::RenderState
     ~RenderState() = default;
 };
 
-Renderer::Renderer()
+GraphicsApi::GraphicsApi()
     : state_(nullptr)
 {
     // TODO: heap allocation required here?
@@ -293,7 +293,7 @@ Renderer::Renderer()
     };
 }
 
-Renderer::~Renderer()
+GraphicsApi::~GraphicsApi()
 {
     if (state_->context != nullptr)
     {
@@ -305,7 +305,7 @@ Renderer::~Renderer()
     state_ = nullptr;
 }
 
-bool Renderer::initialize(const Options& opts)
+bool GraphicsApi::initialize(const Options& opts)
 {
     NLRS_ASSERT(state_->context == nullptr);
     const int glMajor = 3;
@@ -358,7 +358,7 @@ bool Renderer::initialize(const Options& opts)
     return true;
 }
 
-Renderer::BufferInfo Renderer::makeBufferWithData_(const BufferOptions& options, const void* data, usize elementSize, usize elementCount)
+GraphicsApi::BufferInfo GraphicsApi::makeBufferWithData(const BufferOptions& options, const void* data, usize elementSize, usize elementCount)
 {
     GlBufferObject object = { 0 };
     glGenBuffers(1, &object.buffer);
@@ -374,7 +374,7 @@ Renderer::BufferInfo Renderer::makeBufferWithData_(const BufferOptions& options,
     return object;
 }
 
-void Renderer::releaseBuffer(BufferInfo bufferInfo)
+void GraphicsApi::releaseBuffer(BufferInfo bufferInfo)
 {
     if (bufferInfo == InvalidBuffer)
     {
@@ -386,7 +386,7 @@ void Renderer::releaseBuffer(BufferInfo bufferInfo)
     glDeleteBuffers(1, &object);
 }
 
-Renderer::ShaderInfo Renderer::makeShader(const Array<ShaderStage>& stages)
+GraphicsApi::ShaderInfo GraphicsApi::makeShader(const Array<ShaderStage>& stages)
 {
     u32 program = glCreateProgram();
 
@@ -446,7 +446,7 @@ Renderer::ShaderInfo Renderer::makeShader(const Array<ShaderStage>& stages)
     return program;
 }
 
-void Renderer::releaseShader(ShaderInfo program)
+void GraphicsApi::releaseShader(ShaderInfo program)
 {
     if (program == InvalidShader)
     {
@@ -456,7 +456,7 @@ void Renderer::releaseShader(ShaderInfo program)
     glDeleteProgram(program);
 }
 
-Renderer::PipelineInfo Renderer::makePipeline(const Renderer::PipelineOptions& opts)
+GraphicsApi::PipelineInfo GraphicsApi::makePipeline(const GraphicsApi::PipelineOptions& opts)
 {
     Array<GlAttribute> layout(*HeapAllocatorLocator::get());
 
@@ -488,7 +488,7 @@ Renderer::PipelineInfo Renderer::makePipeline(const Renderer::PipelineOptions& o
     return reinterpret_cast<uptr>(obj);
 }
 
-void Renderer::releasePipeline(PipelineInfo info)
+void GraphicsApi::releasePipeline(PipelineInfo info)
 {
     if (info == InvalidPipeline)
     {
@@ -501,12 +501,12 @@ void Renderer::releasePipeline(PipelineInfo info)
     state_->pipelines.release(obj);
 }
 
-void Renderer::clearBuffers()
+void GraphicsApi::clearBuffers()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::swapBuffers()
+void GraphicsApi::swapBuffers()
 {
     SDL_GL_SwapWindow(WindowLocator::get()->ptr());
 }
