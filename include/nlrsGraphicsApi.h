@@ -155,6 +155,10 @@ public:
 
     bool initialize(const Options& options);
 
+    // create a new buffer on the GPU
+    // data is a pointer to a contiguous array of data
+    // elementSize is the size of each element in bytes, elementCount is the number of elements
+    BufferInfo makeBufferWithData(const BufferOptions& options, const void* data, usize elementSize, usize elementCount);
     template<typename T>
     BufferInfo makeBuffer(const BufferOptions& opts, const Array<T>& data)
     {
@@ -175,11 +179,9 @@ public:
     void releaseShader(ShaderInfo info);
 
     PipelineInfo makePipeline(const PipelineOptions& opts);
-
     void releasePipeline(PipelineInfo);
 
     DrawStateInfo makeDrawState(const DrawStateOptions& opts);
-
     void releaseDrawState(DrawStateInfo);
 
     // TODO: this will probably be included in a draw pass
@@ -189,8 +191,6 @@ public:
     void swapBuffers();
 
 private:
-    BufferInfo makeBufferWithData(const BufferOptions& options, const void* data, usize elementSize, usize elementCount);
-
     struct RenderState;
 
     RenderState*    state_;

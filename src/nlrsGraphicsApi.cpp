@@ -497,7 +497,6 @@ void GraphicsApi::releasePipeline(PipelineInfo info)
     }
 
     PipelineObject* obj = reinterpret_cast<PipelineObject*>(info);
-    obj->~PipelineObject();
     state_->pipelines.release(obj);
 }
 
