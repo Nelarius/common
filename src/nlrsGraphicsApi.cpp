@@ -8,7 +8,11 @@
 #include "nlrsObjectPool.h"
 #include "SDL_video.h"
 #include "GL/gl3w.h"
+
+#include <cstring>
 #include <string>
+#include <unordered_map>
+#include <utility>
 
 namespace
 {
@@ -38,14 +42,21 @@ struct GlAttribute
 
 struct PipelineObject
 {
-    nlrs::GraphicsApi::ShaderInfo   shader;
-    nlrs::Array<GlAttribute>     layout;
+    nlrs::GraphicsApi::ShaderInfo shader;
+    nlrs::Array<GlAttribute> layout;
     bool depthTestEnabled;
     bool cullingEnabled;
     bool scissorTestEnabled;
     bool blendEnabled;
     nlrs::GraphicsApi::ComparisonFunction depthComparisonFunction;
     nlrs::GraphicsApi::BlendFunction blendFunction;
+};
+
+struct RenderPass
+{
+    GLuint currentProgram;
+    GLint previousProgram;
+    bool active;
 };
 
 GLenum asGlBufferTarget(nlrs::GraphicsApi::BufferType type)
@@ -274,9 +285,18 @@ struct GraphicsApi::RenderState
 {
     SDL_GLContext context;
     ObjectPool<PipelineObject> pipelines;
-    ObjectPool<DrawStateOptions> drawStates;
+    std::unordered_map<BufferInfo, u32> boundUniformBuffers;
+    RenderPass renderPass;
+    u32 currentUniformBinding;
 
-    RenderState() = default;
+    RenderState(ObjectPool<PipelineObject, 32u>&& pipelinePool)
+        : context(nullptr),
+        pipelines(std::move(pipelinePool)),
+        boundUniformBuffers(),
+        renderPass{0u, 0, false},
+        currentUniformBinding(0u)
+    {}
+
     ~RenderState() = default;
 };
 
@@ -284,13 +304,9 @@ GraphicsApi::GraphicsApi()
     : state_(nullptr)
 {
     // TODO: heap allocation required here?
+    // could just use system allocator here
     state_ = new (HeapAllocatorLocator::get()->allocate(sizeof(RenderState), alignof(RenderState)))
-        RenderState
-    {
-        nullptr,
-        ObjectPool<PipelineObject>(*HeapAllocatorLocator::get()),
-        ObjectPool<DrawStateOptions>(*HeapAllocatorLocator::get())
-    };
+        RenderState{ ObjectPool<PipelineObject, 32u>(*HeapAllocatorLocator::get()) };
 }
 
 GraphicsApi::~GraphicsApi()
@@ -364,7 +380,7 @@ GraphicsApi::BufferInfo GraphicsApi::makeBufferWithData(const BufferOptions& opt
     glGenBuffers(1, &object.buffer);
     object.target = asGlBufferTarget(options.type);
 
-    GLint prev = 0u;
+    GLint prev = 0;
     glGetIntegerv(getBindingTarget(object.target), &prev);
 
     glBindBuffer(object.target, object.buffer);
@@ -372,6 +388,21 @@ GraphicsApi::BufferInfo GraphicsApi::makeBufferWithData(const BufferOptions& opt
     glBindBuffer(object.target, prev);
 
     return object;
+}
+
+void GraphicsApi::setBufferData(BufferInfo info, const void* data, usize bytes)
+{
+    GlBufferObject obj = *reinterpret_cast<const GlBufferObject*>(&info);
+
+    glBindBuffer(obj.target, obj.buffer);
+    GLint prev = 0;
+    glGetIntegerv(getBindingTarget(obj.target), &prev);
+
+    glBindBuffer(obj.target, obj.buffer);
+    void* deviceMem = glMapBuffer(obj.target, GL_WRITE_ONLY);
+    std::memcpy(deviceMem, data, bytes);
+    glUnmapBuffer(obj.target);
+    glBindBuffer(obj.target, prev);
 }
 
 void GraphicsApi::releaseBuffer(BufferInfo bufferInfo)
@@ -422,7 +453,6 @@ GraphicsApi::ShaderInfo GraphicsApi::makeShader(const Array<ShaderStage>& stages
         }
 
         glAttachShader(program, shader);
-
         glDeleteShader(shader);
     }
 
@@ -441,6 +471,35 @@ GraphicsApi::ShaderInfo GraphicsApi::makeShader(const Array<ShaderStage>& stages
         glDeleteProgram(program);
 
         return InvalidShader;
+    }
+
+    // set the uniform block buffer bindings if the program linkage succeeded
+    for (const auto& stage : stages)
+    {
+        for (const auto& u : stage.uniforms)
+        {
+            GlBufferObject obj = *reinterpret_cast<const GlBufferObject*>(&u.buffer);
+
+            u32 bufferBinding;
+            auto it = state_->boundUniformBuffers.find(u.buffer);
+            if (it != state_->boundUniformBuffers.end())
+            {
+                bufferBinding = it->second;
+            }
+            else
+            {
+                bufferBinding = state_->currentUniformBinding++;
+#ifdef NLRS_DEBUG
+                i32 maxBindings;
+                glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
+                NLRS_ASSERT(maxBindings != -1);
+                NLRS_ASSERT(bufferBinding < u32(maxBindings));
+#endif
+                state_->boundUniformBuffers.insert(std::make_pair(u.buffer, bufferBinding));
+                glBindBufferBase(obj.target, bufferBinding, obj.buffer);
+            }
+            glUniformBlockBinding(program, u.binding, bufferBinding);
+        }
     }
 
     return program;
@@ -482,8 +541,11 @@ GraphicsApi::PipelineInfo GraphicsApi::makePipeline(const GraphicsApi::PipelineO
         }
     }
 
-    // TODO: all the other state
-    PipelineObject* obj = state_->pipelines.create(opts.shader, std::move(layout));
+    PipelineObject* obj = state_->pipelines.create(
+        opts.shader, std::move(layout), opts.depthTestEnabled, opts.cullingEnabled,
+        opts.scissorTestEnabled, opts.blendEnabled, opts.depthComparisonFunction, opts.blendFunction);
+
+    NLRS_ASSERT(obj != nullptr);
 
     return reinterpret_cast<uptr>(obj);
 }
@@ -498,6 +560,31 @@ void GraphicsApi::releasePipeline(PipelineInfo info)
 
     PipelineObject* obj = reinterpret_cast<PipelineObject*>(info);
     state_->pipelines.release(obj);
+}
+
+void GraphicsApi::beginPass(PipelineInfo info)
+{
+    PipelineObject& pipeline = *reinterpret_cast<PipelineObject*>(info);
+
+    state_->renderPass.active = true;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &state_->renderPass.previousProgram);
+    NLRS_ASSERT(state_->renderPass.previousProgram != -1);
+
+    glUseProgram(pipeline.shader);
+
+    for (const auto& layout : pipeline.layout)
+    {
+        glEnableVertexAttribArray(layout.index);
+        glVertexAttribPointer(
+            layout.index,      layout.elements, layout.type,
+            layout.normalized, layout.stride,   0);
+    }
+}
+
+void GraphicsApi::endPass()
+{
+    glUseProgram(state_->renderPass.previousProgram);
+    state_->renderPass.active = true;
 }
 
 void GraphicsApi::clearBuffers()

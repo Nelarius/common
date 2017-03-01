@@ -47,16 +47,17 @@ public:
         Compute
     };
 
+    struct Uniform
+    {
+        BufferInfo buffer;
+        u32 binding;
+    };
+
     struct ShaderStage
     {
         ShaderType type;
         const char* source;
-    };
-
-    struct RenderPass
-    {
-        // TODO: render target
-        Vec3f clearColor{ 0.f, 0.f, 0.f };
+        StaticArray<Uniform, 6> uniforms;
     };
 
     enum class AttributeType
@@ -131,6 +132,12 @@ public:
         BlendFunction blendFunction;
     };
 
+    struct PassOptions
+    {
+        // TODO: render target
+        Vec3f clearColor{ 0.f, 0.f, 0.f };
+    };
+
     struct DrawStateOptions
     {
         PipelineInfo pipeline;
@@ -159,11 +166,27 @@ public:
     // data is a pointer to a contiguous array of data
     // elementSize is the size of each element in bytes, elementCount is the number of elements
     BufferInfo makeBufferWithData(const BufferOptions& options, const void* data, usize elementSize, usize elementCount);
+    void setBufferData(BufferInfo info, const void* data, usize bytes);
     template<typename T>
     BufferInfo makeBuffer(const BufferOptions& opts, const Array<T>& data)
     {
         NLRS_ASSERT(data.size() != 0u);
         return makeBufferWithData(opts, data.data(), sizeof(T), data.size());
+    }
+    template<typename T>
+    BufferInfo makeBuffer(const BufferOptions& opts, const T& obj)
+    {
+        return makeBufferWithData(opts, &obj, sizeof(T), 1u);
+    }
+    template<typename T>
+    void setBuffer(BufferInfo info, const Array<T>& data)
+    {
+        setBufferData(info, data.data(), data.size() * sizeof(T));
+    }
+    template<typename T>
+    void setBuffer(BufferInfo info, const T& obj)
+    {
+        setBufferData(info, &obj, sizeof(T));
     }
     // release a buffer object created with makeBuffer
     // if the buffer object is invalid, then this does nothing
@@ -181,8 +204,20 @@ public:
     PipelineInfo makePipeline(const PipelineOptions& opts);
     void releasePipeline(PipelineInfo);
 
+    // TODO: are these really needed?
+    // Use DrawStateOptions directly?
     DrawStateInfo makeDrawState(const DrawStateOptions& opts);
     void releaseDrawState(DrawStateInfo);
+
+    // TODO: should the render pass be tied to the concept of a pipeline or not?
+    void beginPass(PipelineInfo info);
+    void endPass();
+
+    /*template<typename T>
+    void applyUniform(UniformInfo info, const T& data)
+    {
+        setBuffer(uniform.buffer, data);
+    }*/
 
     // TODO: this will probably be included in a draw pass
     void clearBuffers();
