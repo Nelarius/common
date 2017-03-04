@@ -8,129 +8,161 @@
 namespace nlrs
 {
 
+using BufferInfo = u64;
+using ShaderInfo = u32;
+using PipelineInfo = uptr;
+using DrawStateInfo = usize;
+
+/***
+*       ___       ______
+*      / _ )__ __/ _/ _/__ ____
+*     / _  / // / _/ _/ -_) __/
+*    /____/\_,_/_//_/ \__/_/
+*
+*/
+
+enum class BufferType
+{
+    Array,
+    IndexArray,
+    Uniform
+};
+
+enum class BufferUsageHint
+{
+    StaticDraw
+};
+
+struct BufferOptions
+{
+    BufferType      type;
+    BufferUsageHint hint;
+};
+
+/***
+*       ______           __
+*      / __/ /  ___ ____/ /__ ____
+*     _\ \/ _ \/ _ `/ _  / -_) __/
+*    /___/_//_/\_,_/\_,_/\__/_/
+*
+*/
+
+enum class ShaderType
+{
+    Vertex,
+    Fragment,
+    Geometry,
+    Compute
+};
+
+struct Uniform
+{
+    BufferInfo buffer;
+    u32 binding;
+};
+
+struct ShaderStage
+{
+    ShaderType type;
+    const char* source;
+    StaticArray<Uniform, 6> uniforms;
+};
+
+/***
+*       ___  _          ___
+*      / _ \(_)__  ___ / (_)__  ___
+*     / ___/ / _ \/ -_) / / _ \/ -_)
+*    /_/  /_/ .__/\__/_/_/_//_/\__/
+*          /_/
+*/
+
+enum class AttributeType
+{
+    Float1,
+    Float2,
+    Float3,
+    Float4
+};
+
+struct VertexAttribute
+{
+    VertexAttribute(const char* name, AttributeType type)
+        : used(true),
+        name(name),
+        type(type)
+    {}
+
+    VertexAttribute(AttributeType type)
+        : used(false),
+        name(nullptr),
+        type(type)
+    {}
+
+    bool            used;
+    const char*     name;
+    AttributeType   type;
+};
+
+// for OpenGL correspondance, see http://docs.gl/gl4/glDepthFunc
+enum class ComparisonFunction
+{
+    Never,
+    Less,
+    Equal,
+    Lequal,
+    Greater,
+    NotEqual,
+    Gequal,
+    Always
+};
+
+// for OpenGL correspondance, see http://docs.gl/gl4/glBlendEquation
+// TODO: see which one of these OpenGL uses by default
+enum class BlendFunction
+{
+    Add,
+    Subtract,
+    ReverseSubtract
+};
+
+struct PipelineOptions
+{
+    PipelineOptions(ShaderInfo shaderInfo)
+        : shader(shaderInfo),
+        layout(),
+        depthTestEnabled(true),
+        cullingEnabled(true),
+        scissorTestEnabled(false),
+        blendEnabled(false),
+        depthComparisonFunction(ComparisonFunction::Less),
+        blendFunction(BlendFunction::Add)   // TODO: see which one of these OpenGL uses by default
+    {}
+
+    ShaderInfo                       shader;
+    StaticArray<VertexAttribute, 6>  layout;
+    bool depthTestEnabled;
+    bool cullingEnabled;
+    bool scissorTestEnabled;
+    bool blendEnabled;
+    ComparisonFunction depthComparisonFunction;
+    BlendFunction blendFunction;
+};
+
+/***
+*      _____              __   _           ___   ___  ____
+*     / ___/______ ____  / /  (_)______   / _ | / _ \/  _/
+*    / (_ / __/ _ `/ _ \/ _ \/ / __(_-<  / __ |/ ___// /
+*    \___/_/  \_,_/ .__/_//_/_/\__/___/ /_/ |_/_/  /___/
+*                /_/
+*/
+
 // TODO: pass window parameter explicitly
 class GraphicsApi
 {
 public:
-    using BufferInfo = u64;
-    using ShaderInfo = u32;
-    using PipelineInfo = uptr;
-    using DrawStateInfo = usize;
-
     static constexpr BufferInfo     InvalidBuffer{ 0xffffffffffffffff };
     static constexpr ShaderInfo     InvalidShader{ 0u };
     static constexpr PipelineInfo   InvalidPipeline{ 0u };
-
-    enum class BufferType
-    {
-        Array,
-        IndexArray,
-        Uniform
-    };
-
-    enum class BufferUsageHint
-    {
-        StaticDraw
-    };
-
-    struct BufferOptions
-    {
-        BufferType      type;
-        BufferUsageHint hint;
-    };
-
-    enum class ShaderType
-    {
-        Vertex,
-        Fragment,
-        Geometry,
-        Compute
-    };
-
-    struct Uniform
-    {
-        BufferInfo buffer;
-        u32 binding;
-    };
-
-    struct ShaderStage
-    {
-        ShaderType type;
-        const char* source;
-        StaticArray<Uniform, 6> uniforms;
-    };
-
-    enum class AttributeType
-    {
-        Float1,
-        Float2,
-        Float3,
-        Float4
-    };
-
-    struct VertexAttribute
-    {
-        VertexAttribute(const char* name, AttributeType type)
-            : used(true),
-            name(name),
-            type(type)
-        {}
-
-        VertexAttribute(AttributeType type)
-            : used(false),
-            name(nullptr),
-            type(type)
-        {}
-
-        bool            used;
-        const char*     name;
-        AttributeType   type;
-    };
-
-    // for OpenGL correspondance, see http://docs.gl/gl4/glDepthFunc
-    enum class ComparisonFunction
-    {
-        Never,
-        Less,
-        Equal,
-        Lequal,
-        Greater,
-        NotEqual,
-        Gequal,
-        Always
-    };
-
-    // for OpenGL correspondance, see http://docs.gl/gl4/glBlendEquation
-    // TODO: see which one of these OpenGL uses by default
-    enum class BlendFunction
-    {
-        Add,
-        Subtract,
-        ReverseSubtract
-    };
-
-    struct PipelineOptions
-    {
-        PipelineOptions(ShaderInfo shaderInfo)
-            : shader(shaderInfo),
-            layout(),
-            depthTestEnabled(true),
-            cullingEnabled(true),
-            scissorTestEnabled(false),
-            blendEnabled(false),
-            depthComparisonFunction(ComparisonFunction::Less),
-            blendFunction(BlendFunction::Add)   // TODO: see which one of these OpenGL uses by default
-        {}
-
-        ShaderInfo                       shader;
-        StaticArray<VertexAttribute, 6>  layout;
-        bool depthTestEnabled;
-        bool cullingEnabled;
-        bool scissorTestEnabled;
-        bool blendEnabled;
-        ComparisonFunction depthComparisonFunction;
-        BlendFunction blendFunction;
-    };
 
     struct PassOptions
     {
@@ -192,10 +224,6 @@ public:
     // if the buffer object is invalid, then this does nothing
     void releaseBuffer(BufferInfo info);
 
-    // TODO: map buffer range
-    // support should be added once you can create a buffer object with
-    // uninitialized memory
-
     ShaderInfo makeShader(const Array<ShaderStage>&);
     // release a shader created with makeShader
     // if the shader is invalid, this does nothing
@@ -212,12 +240,6 @@ public:
     // TODO: should the render pass be tied to the concept of a pipeline or not?
     void beginPass(PipelineInfo info);
     void endPass();
-
-    /*template<typename T>
-    void applyUniform(UniformInfo info, const T& data)
-    {
-        setBuffer(uniform.buffer, data);
-    }*/
 
     // TODO: this will probably be included in a draw pass
     void clearBuffers();

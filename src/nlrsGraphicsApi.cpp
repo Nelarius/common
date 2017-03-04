@@ -25,7 +25,7 @@ struct GlBufferObject
     nlrs::u32 buffer;
     nlrs::i32 target;
 
-    operator nlrs::GraphicsApi::BufferInfo() const
+    operator nlrs::BufferInfo() const
     {
         return *reinterpret_cast<const nlrs::u64*>(this);
     }
@@ -42,14 +42,14 @@ struct GlAttribute
 
 struct PipelineObject
 {
-    nlrs::GraphicsApi::ShaderInfo shader;
+    nlrs::ShaderInfo shader;
     nlrs::Array<GlAttribute> layout;
     bool depthTestEnabled;
     bool cullingEnabled;
     bool scissorTestEnabled;
     bool blendEnabled;
-    nlrs::GraphicsApi::ComparisonFunction depthComparisonFunction;
-    nlrs::GraphicsApi::BlendFunction blendFunction;
+    nlrs::ComparisonFunction depthComparisonFunction;
+    nlrs::BlendFunction blendFunction;
 };
 
 struct RenderPass
@@ -59,46 +59,46 @@ struct RenderPass
     bool active;
 };
 
-GLenum asGlBufferTarget(nlrs::GraphicsApi::BufferType type)
+GLenum asGlBufferTarget(nlrs::BufferType type)
 {
     switch (type)
     {
-        case nlrs::GraphicsApi::BufferType::Array:      return GL_ARRAY_BUFFER;
-        case nlrs::GraphicsApi::BufferType::IndexArray: return GL_ELEMENT_ARRAY_BUFFER;
-        case nlrs::GraphicsApi::BufferType::Uniform:    return GL_UNIFORM_BUFFER;
+        case nlrs::BufferType::Array:      return GL_ARRAY_BUFFER;
+        case nlrs::BufferType::IndexArray: return GL_ELEMENT_ARRAY_BUFFER;
+        case nlrs::BufferType::Uniform:    return GL_UNIFORM_BUFFER;
         default: NLRS_ASSERT(!"Unreachable"); return 0;
     }
 }
 
-GLenum asGlUsageHint(nlrs::GraphicsApi::BufferUsageHint hint)
+GLenum asGlUsageHint(nlrs::BufferUsageHint hint)
 {
     switch (hint)
     {
-        case nlrs::GraphicsApi::BufferUsageHint::StaticDraw:    return GL_STATIC_DRAW;
+        case nlrs::BufferUsageHint::StaticDraw:    return GL_STATIC_DRAW;
         default: NLRS_ASSERT(!"Unreachable");                return 0;
     }
 }
 
-GLenum asGlShaderType(nlrs::GraphicsApi::ShaderType type)
+GLenum asGlShaderType(nlrs::ShaderType type)
 {
     switch (type)
     {
-        case nlrs::GraphicsApi::ShaderType::Vertex:     return GL_VERTEX_SHADER;
-        case nlrs::GraphicsApi::ShaderType::Fragment:   return GL_FRAGMENT_SHADER;
-        case nlrs::GraphicsApi::ShaderType::Geometry:   return GL_GEOMETRY_SHADER;
-        case nlrs::GraphicsApi::ShaderType::Compute:    return GL_COMPUTE_SHADER;
+        case nlrs::ShaderType::Vertex:     return GL_VERTEX_SHADER;
+        case nlrs::ShaderType::Fragment:   return GL_FRAGMENT_SHADER;
+        case nlrs::ShaderType::Geometry:   return GL_GEOMETRY_SHADER;
+        case nlrs::ShaderType::Compute:    return GL_COMPUTE_SHADER;
         default: NLRS_ASSERT(!"Unreachable"); return 0;
     }
 }
 
-nlrs::u32 asByteSize(nlrs::GraphicsApi::AttributeType type)
+nlrs::u32 asByteSize(nlrs::AttributeType type)
 {
     switch (type)
     {
-        case nlrs::GraphicsApi::AttributeType::Float1:  return 4u;
-        case nlrs::GraphicsApi::AttributeType::Float2:  return 8u;
-        case nlrs::GraphicsApi::AttributeType::Float3:  return 12u;
-        case nlrs::GraphicsApi::AttributeType::Float4:  return 16u;
+        case nlrs::AttributeType::Float1:  return 4u;
+        case nlrs::AttributeType::Float2:  return 8u;
+        case nlrs::AttributeType::Float3:  return 12u;
+        case nlrs::AttributeType::Float4:  return 16u;
         default:
             NLRS_ASSERT(!"You shouldn't reach this");
             break;
@@ -106,14 +106,14 @@ nlrs::u32 asByteSize(nlrs::GraphicsApi::AttributeType type)
     return 0u;
 }
 
-GLint asGlAttributeElementCount(nlrs::GraphicsApi::AttributeType type)
+GLint asGlAttributeElementCount(nlrs::AttributeType type)
 {
     switch (type)
     {
-        case nlrs::GraphicsApi::AttributeType::Float1:  return 1;
-        case nlrs::GraphicsApi::AttributeType::Float2:  return 2;
-        case nlrs::GraphicsApi::AttributeType::Float3:  return 3;
-        case nlrs::GraphicsApi::AttributeType::Float4:  return 4;
+        case nlrs::AttributeType::Float1:  return 1;
+        case nlrs::AttributeType::Float2:  return 2;
+        case nlrs::AttributeType::Float3:  return 3;
+        case nlrs::AttributeType::Float4:  return 4;
         default:
             NLRS_ASSERT(!"You shouldn't reach this");
             break;
@@ -121,14 +121,14 @@ GLint asGlAttributeElementCount(nlrs::GraphicsApi::AttributeType type)
     return 0;
 }
 
-GLenum asGlAttributeType(nlrs::GraphicsApi::AttributeType type)
+GLenum asGlAttributeType(nlrs::AttributeType type)
 {
     switch (type)
     {
-        case nlrs::GraphicsApi::AttributeType::Float1:
-        case nlrs::GraphicsApi::AttributeType::Float2:
-        case nlrs::GraphicsApi::AttributeType::Float3:
-        case nlrs::GraphicsApi::AttributeType::Float4:  return GL_FLOAT;
+        case nlrs::AttributeType::Float1:
+        case nlrs::AttributeType::Float2:
+        case nlrs::AttributeType::Float3:
+        case nlrs::AttributeType::Float4:  return GL_FLOAT;
         default:
             NLRS_ASSERT(!"You shouldn't reach this");
             break;
@@ -136,30 +136,30 @@ GLenum asGlAttributeType(nlrs::GraphicsApi::AttributeType type)
     return 0u;
 }
 
-GLenum asGlBlendMode(nlrs::GraphicsApi::BlendFunction function)
+GLenum asGlBlendMode(nlrs::BlendFunction function)
 {
     switch(function)
     {
-        case nlrs::GraphicsApi::BlendFunction::Add: return GL_FUNC_ADD;
-        case nlrs::GraphicsApi::BlendFunction::Subtract: return GL_FUNC_SUBTRACT;
-        case nlrs::GraphicsApi::BlendFunction::ReverseSubtract: return GL_FUNC_REVERSE_SUBTRACT;
+        case nlrs::BlendFunction::Add: return GL_FUNC_ADD;
+        case nlrs::BlendFunction::Subtract: return GL_FUNC_SUBTRACT;
+        case nlrs::BlendFunction::ReverseSubtract: return GL_FUNC_REVERSE_SUBTRACT;
     }
     NLRS_ASSERT(!"You shouldn't reach this");
     return 0;
 }
 
-GLenum asGlDepthFunc(nlrs::GraphicsApi::ComparisonFunction function)
+GLenum asGlDepthFunc(nlrs::ComparisonFunction function)
 {
     switch(function)
     {
-        case nlrs::GraphicsApi::ComparisonFunction::Never: return GL_NEVER;
-        case nlrs::GraphicsApi::ComparisonFunction::Less: return GL_LESS;
-        case nlrs::GraphicsApi::ComparisonFunction::Equal: return GL_EQUAL;
-        case nlrs::GraphicsApi::ComparisonFunction::Lequal: return GL_LEQUAL;
-        case nlrs::GraphicsApi::ComparisonFunction::Greater: return GL_GREATER;
-        case nlrs::GraphicsApi::ComparisonFunction::NotEqual: return GL_NOTEQUAL;
-        case nlrs::GraphicsApi::ComparisonFunction::Gequal: return GL_GEQUAL;
-        case nlrs::GraphicsApi::ComparisonFunction::Always: return GL_ALWAYS;
+        case nlrs::ComparisonFunction::Never: return GL_NEVER;
+        case nlrs::ComparisonFunction::Less: return GL_LESS;
+        case nlrs::ComparisonFunction::Equal: return GL_EQUAL;
+        case nlrs::ComparisonFunction::Lequal: return GL_LEQUAL;
+        case nlrs::ComparisonFunction::Greater: return GL_GREATER;
+        case nlrs::ComparisonFunction::NotEqual: return GL_NOTEQUAL;
+        case nlrs::ComparisonFunction::Gequal: return GL_GEQUAL;
+        case nlrs::ComparisonFunction::Always: return GL_ALWAYS;
     }
     NLRS_ASSERT(!"You shouldn't reach this");
     return 0;
@@ -374,7 +374,7 @@ bool GraphicsApi::initialize(const Options& opts)
     return true;
 }
 
-GraphicsApi::BufferInfo GraphicsApi::makeBufferWithData(const BufferOptions& options, const void* data, usize elementSize, usize elementCount)
+BufferInfo GraphicsApi::makeBufferWithData(const BufferOptions& options, const void* data, usize elementSize, usize elementCount)
 {
     GlBufferObject object = { 0 };
     glGenBuffers(1, &object.buffer);
@@ -417,7 +417,7 @@ void GraphicsApi::releaseBuffer(BufferInfo bufferInfo)
     glDeleteBuffers(1, &object);
 }
 
-GraphicsApi::ShaderInfo GraphicsApi::makeShader(const Array<ShaderStage>& stages)
+ShaderInfo GraphicsApi::makeShader(const Array<ShaderStage>& stages)
 {
     u32 program = glCreateProgram();
 
@@ -515,7 +515,7 @@ void GraphicsApi::releaseShader(ShaderInfo program)
     glDeleteProgram(program);
 }
 
-GraphicsApi::PipelineInfo GraphicsApi::makePipeline(const GraphicsApi::PipelineOptions& opts)
+PipelineInfo GraphicsApi::makePipeline(const PipelineOptions& opts)
 {
     Array<GlAttribute> layout(*HeapAllocatorLocator::get());
 
