@@ -142,7 +142,6 @@ Array<T>::Array(IAllocator& allocator, std::initializer_list<T> list)
     : storage_(allocator),
     size_(0u)
 {
-    resize(list.size());
     for (auto& elem : list)
     {
         pushBack(elem);
