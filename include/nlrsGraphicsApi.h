@@ -9,9 +9,9 @@ namespace nlrs
 {
 
 using BufferInfo = u64;
+using DescriptorInfo = u32;
 using ShaderInfo = u32;
 using PipelineInfo = uptr;
-using DrawStateInfo = usize;
 
 /***
 *       ___       ______
@@ -37,6 +37,44 @@ struct BufferOptions
 {
     BufferType      type;
     BufferUsageHint hint;
+};
+
+enum class AttributeType
+{
+    Float1,
+    Float2,
+    Float3,
+    Float4
+};
+
+struct VertexAttribute
+{
+    VertexAttribute(i32 location, AttributeType type)
+        : used_(true),
+        location_(location),
+        type_(type)
+    {}
+
+    VertexAttribute(AttributeType type)
+        : used_(false),
+        location_(-1),
+        type_(type)
+    {}
+
+    inline bool used() const { return used_; }
+    inline i32 location() const { return location_; }
+    inline AttributeType type() const { return type_; }
+
+private:
+    bool used_;
+    i32 location_;
+    AttributeType type_;
+};
+
+struct DescriptorOptions
+{
+    StaticArray<VertexAttribute, 6> attributes;
+    StaticArray<BufferInfo, 6> buffers;
 };
 
 /***
@@ -76,33 +114,6 @@ struct ShaderStage
 *          /_/
 */
 
-enum class AttributeType
-{
-    Float1,
-    Float2,
-    Float3,
-    Float4
-};
-
-struct VertexAttribute
-{
-    VertexAttribute(const char* name, AttributeType type)
-        : used(true),
-        name(name),
-        type(type)
-    {}
-
-    VertexAttribute(AttributeType type)
-        : used(false),
-        name(nullptr),
-        type(type)
-    {}
-
-    bool            used;
-    const char*     name;
-    AttributeType   type;
-};
-
 // for OpenGL correspondance, see http://docs.gl/gl4/glDepthFunc
 enum class ComparisonFunction
 {
@@ -129,7 +140,6 @@ struct PipelineOptions
 {
     PipelineOptions(ShaderInfo shaderInfo)
         : shader(shaderInfo),
-        layout(),
         depthTestEnabled(true),
         cullingEnabled(true),
         scissorTestEnabled(false),
@@ -138,14 +148,41 @@ struct PipelineOptions
         blendFunction(BlendFunction::Add)   // TODO: see which one of these OpenGL uses by default
     {}
 
-    ShaderInfo                       shader;
-    StaticArray<VertexAttribute, 6>  layout;
+    ShaderInfo shader;
     bool depthTestEnabled;
     bool cullingEnabled;
     bool scissorTestEnabled;
     bool blendEnabled;
     ComparisonFunction depthComparisonFunction;
     BlendFunction blendFunction;
+};
+
+/***
+*       ___                  ______       __
+*      / _ \_______ __    __/ __/ /____ _/ /____
+*     / // / __/ _ `/ |/|/ /\ \/ __/ _ `/ __/ -_)
+*    /____/_/  \_,_/|__,__/___/\__/\_,_/\__/\__/
+*
+*/
+
+enum class DrawMode
+{
+    Triangle,
+    Point
+};
+
+enum class IndexType
+{
+    Ubyte,
+    Uint16,
+    Uint32
+};
+
+struct DrawState
+{
+    DescriptorInfo descriptor;
+    DrawMode mode;
+    int indexCount;
 };
 
 /***
@@ -161,19 +198,17 @@ class GraphicsApi
 {
 public:
     static constexpr BufferInfo     InvalidBuffer{ 0xffffffffffffffff };
+    static constexpr DescriptorInfo InvalidDescriptor{ 0u };
     static constexpr ShaderInfo     InvalidShader{ 0u };
     static constexpr PipelineInfo   InvalidPipeline{ 0u };
+
+    static constexpr usize MaxPipelines{ 32u };
+    static constexpr usize MaxDescriptors{ 32u };
 
     struct PassOptions
     {
         // TODO: render target
         Vec3f clearColor{ 0.f, 0.f, 0.f };
-    };
-
-    struct DrawStateOptions
-    {
-        PipelineInfo pipeline;
-        BufferInfo buffer;
     };
 
     struct Options
@@ -197,18 +232,18 @@ public:
     // create a new buffer on the GPU
     // data is a pointer to a contiguous array of data
     // elementSize is the size of each element in bytes, elementCount is the number of elements
-    BufferInfo makeBufferWithData(const BufferOptions& options, const void* data, usize elementSize, usize elementCount);
+    BufferInfo makeBufferWithData(const BufferOptions& options, const void* data, usize dataSize);
     void setBufferData(BufferInfo info, const void* data, usize bytes);
     template<typename T>
     BufferInfo makeBuffer(const BufferOptions& opts, const Array<T>& data)
     {
         NLRS_ASSERT(data.size() != 0u);
-        return makeBufferWithData(opts, data.data(), sizeof(T), data.size());
+        return makeBufferWithData(opts, data.data(), sizeof(T) * data.size());
     }
     template<typename T>
     BufferInfo makeBuffer(const BufferOptions& opts, const T& obj)
     {
-        return makeBufferWithData(opts, &obj, sizeof(T), 1u);
+        return makeBufferWithData(opts, &obj, sizeof(T));
     }
     template<typename T>
     void setBuffer(BufferInfo info, const Array<T>& data)
@@ -224,6 +259,10 @@ public:
     // if the buffer object is invalid, then this does nothing
     void releaseBuffer(BufferInfo info);
 
+    // Use a descriptor object to specify the layout of the vertex data in a buffer
+    DescriptorInfo makeDescriptor(const DescriptorOptions& vertexDescriptor);
+    void releaseDescriptor(DescriptorInfo info);
+
     ShaderInfo makeShader(const Array<ShaderStage>&);
     // release a shader created with makeShader
     // if the shader is invalid, this does nothing
@@ -232,14 +271,14 @@ public:
     PipelineInfo makePipeline(const PipelineOptions& opts);
     void releasePipeline(PipelineInfo);
 
-    // TODO: are these really needed?
-    // Use DrawStateOptions directly?
-    DrawStateInfo makeDrawState(const DrawStateOptions& opts);
-    void releaseDrawState(DrawStateInfo);
-
     // TODO: should the render pass be tied to the concept of a pipeline or not?
     void beginPass(PipelineInfo info);
     void endPass();
+
+    // render a buffer object
+    // this must be called after beginPass
+    void applyDrawState(const DrawState& drawState);
+    void applyIndexedDrawState(const DrawState& drawState, IndexType indexType);
 
     // TODO: this will probably be included in a draw pass
     void clearBuffers();
