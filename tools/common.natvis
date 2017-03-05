@@ -16,7 +16,17 @@
             <Item Name="[size]" ExcludeView="simple">size_</Item>
             <ArrayItems>
                 <Size>size_</Size>
-                <ValuePointer>begin_</ValuePointer>
+                <ValuePointer>($T1*)storage_.at(0)</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="nlrs::StaticArray&lt;*&gt;">
+        <DisplayString>{{ size_={size_} }}</DisplayString>
+        <Expand>
+            <Item Name="[size]" ExcludeView="simple">size_</Item>
+            <ArrayItems>
+                <Size>size_</Size>
+                <ValuePointer>($T1*)storage_</ValuePointer>
             </ArrayItems>
         </Expand>
     </Type>
