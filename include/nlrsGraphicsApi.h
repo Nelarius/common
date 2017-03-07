@@ -96,7 +96,7 @@ enum class ShaderType
 struct Uniform
 {
     BufferInfo buffer;
-    u32 binding;
+    const char* blockName;
 };
 
 struct ShaderStage
@@ -213,6 +213,8 @@ public:
 
     struct Options
     {
+        int major{ 3 };
+        int minor{ 3 };
         int depthBits{ 24 };
         int stencilBits{ 8 };
         int msBuffers{ 1 };

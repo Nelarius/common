@@ -1,11 +1,11 @@
-#include "nlrsGraphicsApi.h"
-#include "nlrsWindow.h"
 #include "nlrsAliases.h"
 #include "nlrsAllocator.h"
 #include "nlrsArray.h"
 #include "nlrsConfiguration.h"
+#include "nlrsGraphicsApi.h"
 #include "nlrsLog.h"
 #include "nlrsObjectPool.h"
+#include "nlrsWindow.h"
 #include "SDL_video.h"
 
 // gl3w.h includes glcorearb.h, which includes the dreaded windows.h
@@ -51,7 +51,6 @@ struct PipelineObject
 struct RenderPass
 {
     const PipelineObject* currentPipeline;
-    GLuint currentProgram;
     GLint previousProgram;
     GLint previousVertexArrayObject;
     bool active;
@@ -358,14 +357,12 @@ GraphicsApi::~GraphicsApi()
 bool GraphicsApi::initialize(const Options& opts)
 {
     NLRS_ASSERT(state_->context == nullptr);
-    const int glMajor = 3;
-    const int glMinor = 3;
 #ifdef NLRS_DEBUG
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 #endif
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glMajor);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, glMinor);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, opts.major);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, opts.minor);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, opts.depthBits);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, opts.stencilBits);
@@ -384,7 +381,7 @@ bool GraphicsApi::initialize(const Options& opts)
         return false;
     }
 
-    if (!gl3wIsSupported(glMajor, glMinor))
+    if (!gl3wIsSupported(opts.major, opts.minor))
     {
         return false;
     }
@@ -600,7 +597,7 @@ ShaderInfo GraphicsApi::makeShader(const Array<ShaderStage>& stages)
                 state_->boundUniformBuffers.insert(std::make_pair(u.buffer, bufferBinding));
                 glBindBufferBase(obj.target, bufferBinding, obj.buffer);
             }
-            glUniformBlockBinding(program, u.binding, bufferBinding);
+            glUniformBlockBinding(program, glGetUniformBlockIndex(program, u.blockName), bufferBinding);
         }
     }
 
@@ -671,17 +668,6 @@ void GraphicsApi::applyDrawState(const DrawState& drawState)
 
     glBindVertexArray(drawState.descriptor);
     glDrawArrays(asGlDrawMode(drawState.mode), 0, drawState.indexCount);
-    /*const GlBufferObject& bufferObj = asGlBufferObject(drawState.buffer);
-    const Descriptor& descriptor = asDescriptorObject(drawState.descriptor);
-
-    glBindBuffer(bufferObj.target, bufferObj.buffer);
-
-    for (const auto& attribute : descriptor)
-    {
-        setAttribute(attribute);
-    }
-
-    glDrawArrays(asGlDrawMode(drawState.mode), 0, drawState.indexCount);*/
 }
 
 void GraphicsApi::applyIndexedDrawState(const DrawState& drawState, IndexType indexType)
@@ -690,19 +676,6 @@ void GraphicsApi::applyIndexedDrawState(const DrawState& drawState, IndexType in
 
     glBindVertexArray(drawState.descriptor);
     glDrawElements(asGlDrawMode(drawState.mode), drawState.indexCount, asGlIndexType(indexType), nullptr);
-    /*GlBufferObject bufferObj = asGlBufferObject(drawState.buffer);
-    GlBufferObject indexObj = asGlBufferObject(indexState.buffer);
-    const Descriptor& descriptor = asDescriptorObject(drawState.descriptor);
-
-    glBindBuffer(bufferObj.target, bufferObj.buffer);
-    glBindBuffer(indexObj.target, indexObj.buffer);
-
-    for (const auto& attribute : asDescriptorObject(drawState.descriptor))
-    {
-        setAttribute(attribute);
-    }
-
-    glDrawElements(asGlDrawMode(drawState.mode), drawState.indexCount, asGlIndexType(indexState.type), nullptr);*/
 }
 
 void GraphicsApi::clearBuffers()
