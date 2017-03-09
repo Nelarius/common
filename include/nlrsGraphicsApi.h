@@ -96,7 +96,7 @@ enum class ShaderType
 struct Uniform
 {
     BufferInfo buffer;
-    const char* blockName;
+    u32 blockIndex;
 };
 
 struct ShaderStage

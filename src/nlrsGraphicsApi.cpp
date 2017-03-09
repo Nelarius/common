@@ -597,7 +597,7 @@ ShaderInfo GraphicsApi::makeShader(const Array<ShaderStage>& stages)
                 state_->boundUniformBuffers.insert(std::make_pair(u.buffer, bufferBinding));
                 glBindBufferBase(obj.target, bufferBinding, obj.buffer);
             }
-            glUniformBlockBinding(program, glGetUniformBlockIndex(program, u.blockName), bufferBinding);
+            glUniformBlockBinding(program, u.blockIndex, bufferBinding);
         }
     }
 
