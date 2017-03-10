@@ -453,9 +453,10 @@ public:
 
     // the element must be copy-constructible
     usize pushBack(const T&);
-
     // the element must be move-constructible
-    usize pushBack(T&&);
+    usize emplaceBack(T&&);
+    template<typename... Args>
+    usize emplaceBack(Args&&... args);
 
     std::size_t size() const { return size_; }
     std::size_t maxSize() const { return N; }
@@ -576,10 +577,19 @@ usize StaticArray<T, N>::pushBack(const T& elem)
 }
 
 template<typename T, usize N>
-usize StaticArray<T, N>::pushBack(T&& elem)
+usize StaticArray<T, N>::emplaceBack(T&& elem)
 {
     NLRS_ASSERT(size_ < N);
-    new (ptr() + size_) T(std::move(elem));
+    new (ptr() + size_) T(elem);
+    return size_++;
+}
+
+template<typename T, usize N>
+template<typename... Args>
+usize StaticArray<T, N>::emplaceBack(Args&&... args)
+{
+    NLRS_ASSERT(size_ < N);
+    new (ptr() + size_) T{ std::forward<Args>(args)... };
     return size_++;
 }
 
