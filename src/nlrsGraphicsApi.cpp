@@ -37,6 +37,18 @@ struct GlBufferObject
     }
 };
 
+struct GlAttribute
+{
+    GLint       index;
+    GLint       elements;
+    GLenum      type;
+    GLboolean   normalized;
+    GLsizei     stride;
+    const void* offset;
+};
+
+using GlDescriptor = nlrs::StaticArray<GlAttribute, 6>;
+
 struct PipelineObject
 {
     nlrs::ShaderInfo shader;
@@ -66,9 +78,30 @@ static const GlBufferObject& asGlBufferObject(const nlrs::BufferInfo& info)
     return (const GlBufferObject&)info;
 }
 
-static const PipelineObject& asPipelineObject(nlrs::PipelineInfo info)
+static PipelineObject& asPipelineObject(nlrs::PipelineInfo info)
 {
     return *reinterpret_cast<PipelineObject*>(info);
+}
+
+static GlDescriptor& asDescriptorObject(nlrs::DescriptorInfo info)
+{
+    return *reinterpret_cast<GlDescriptor*>(info);
+}
+
+static void applyDescriptor(nlrs::DescriptorInfo info)
+{
+    const GlDescriptor& descriptor = asDescriptorObject(info);
+    for (auto& attrib : descriptor)
+    {
+        glEnableVertexAttribArray(attrib.index);
+        glVertexAttribPointer(
+            attrib.index,
+            attrib.elements,
+            attrib.type,
+            (GLboolean)GL_FALSE,
+            attrib.stride,
+            attrib.offset);
+    }
 }
 
 GLenum asGlBufferTarget(nlrs::BufferType type)
@@ -319,16 +352,20 @@ struct GraphicsApi::RenderState
 {
     SDL_GLContext context;
     ObjectPool<PipelineObject, MaxPipelines> pipelines;
+    ObjectPool<GlDescriptor, MaxDescriptors> descriptors;
     std::unordered_map<BufferInfo, u32> boundUniformBuffers;
     RenderPass renderPass;
     u32 currentUniformBinding;
+    u32 dummyVao;
 
     RenderState(IAllocator& allocator)
         : context(nullptr),
         pipelines(allocator),
+        descriptors(allocator),
         boundUniformBuffers(),
         renderPass{ 0 },
-        currentUniformBinding(0u)
+        currentUniformBinding(0u),
+        dummyVao(0u)
     {}
 
     ~RenderState() = default;
@@ -348,6 +385,8 @@ GraphicsApi::~GraphicsApi()
     {
         SDL_GL_DeleteContext(state_->context);
     }
+
+    glDeleteVertexArrays(1, &state_->dummyVao);
 
     state_->~RenderState();
     HeapAllocatorLocator::get()->free(state_);
@@ -402,6 +441,8 @@ bool GraphicsApi::initialize(const Options& opts)
     glCullFace(GL_BACK);
     glClearColor(0.2f, 0.2f, 0.2f, 1.0);
 
+    glGenVertexArrays(1, &state_->dummyVao);
+
     return true;
 }
 
@@ -448,72 +489,39 @@ void GraphicsApi::releaseBuffer(BufferInfo bufferInfo)
     glDeleteBuffers(1, &obj.buffer);
 }
 
-DescriptorInfo GraphicsApi::makeDescriptor(const DescriptorOptions& descriptor)
+DescriptorInfo GraphicsApi::makeDescriptor(const DescriptorOptions& attributes)
 {
-    GLuint vao = 0u;
-
-    GLint previousVao;
-    glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &previousVao);
-    NLRS_ASSERT(previousVao >= 0);
-
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
     i32 stride = 0u;
-    for (const auto& attrib : descriptor.attributes)
+    for (const auto& attrib : attributes)
     {
         stride += asByteSize(attrib.type());
     }
 
-    // first get the buffers previously bound
-    // TODO: could a linear/stack allocator be used here?
-    Array<GlBufferObject> previousBuffers(SystemAllocator::getInstance());
-    for (const auto& info : descriptor.buffers)
-    {
-        GLint previousTarget = asGlBufferObject(info).target;
-        GLint buffer;
-        glGetIntegerv(getBindingTarget(previousTarget), &buffer);
-        NLRS_ASSERT(buffer >= 0);
-        previousBuffers.pushBack(GlBufferObject{ GLuint(buffer), previousTarget });
-    }
-
-    // bind the buffers to their targets
-    for (const auto& info : descriptor.buffers)
-    {
-        GlBufferObject obj = asGlBufferObject(info);
-        glBindBuffer(obj.target, obj.buffer);
-    }
+    GlDescriptor* descriptor = state_->descriptors.create();
 
     uptr offset = 0u;
-    for (const auto& attrib : descriptor.attributes)
+    for (const auto& attrib : attributes)
     {
         if (attrib.used())
         {
-            glEnableVertexAttribArray(attrib.location());
-            glVertexAttribPointer(
-                attrib.location(),
-                asGlAttributeElementCount(attrib.type()),
-                asGlAttributeType(attrib.type()),
-                (GLboolean)GL_FALSE,
-                stride,
-                (const void*)offset);
+            descriptor->emplaceBack(
+                attrib.location(),                          // index
+                asGlAttributeElementCount(attrib.type()),   // elements
+                asGlAttributeType(attrib.type()),           // type
+                (GLboolean)GL_FALSE,                        // normalized
+                stride,                                     // stride
+                (const void*)offset                         // offset
+            );
         }
         offset += asByteSize(attrib.type());
     }
 
-    // bind the previous buffers and vertex array objects back
-    glBindVertexArray(previousVao);
-    for (const auto& obj : previousBuffers)
-    {
-        glBindBuffer(obj.target, obj.buffer);
-    }
-
-    return vao;
+    return reinterpret_cast<uptr>(descriptor);
 }
 
 void GraphicsApi::releaseDescriptor(DescriptorInfo info)
 {
-    glDeleteVertexArrays(1, &info);
+    state_->descriptors.release(&asDescriptorObject(info));
 }
 
 ShaderInfo GraphicsApi::makeShader(const Array<ShaderStage>& stages)
@@ -650,6 +658,7 @@ void GraphicsApi::beginPass(PipelineInfo info)
     NLRS_ASSERT(state_->renderPass.previousVertexArrayObject >= 0);
 
     glUseProgram(pipeline.shader);
+    glBindVertexArray(state_->dummyVao);
 }
 
 void GraphicsApi::endPass()
@@ -666,15 +675,21 @@ void GraphicsApi::applyDrawState(const DrawState& drawState)
 {
     NLRS_ASSERT(state_->renderPass.active);
 
-    glBindVertexArray(drawState.descriptor);
+    const GlBufferObject& obj = asGlBufferObject(drawState.buffer);
+    glBindBuffer(obj.target, obj.buffer);
+    applyDescriptor(drawState.descriptor);
     glDrawArrays(asGlDrawMode(drawState.mode), 0, drawState.indexCount);
 }
 
-void GraphicsApi::applyIndexedDrawState(const DrawState& drawState, IndexType indexType)
+void GraphicsApi::applyIndexedDrawState(const DrawState& drawState, BufferInfo indexInfo, IndexType indexType)
 {
     NLRS_ASSERT(state_->renderPass.active);
 
-    glBindVertexArray(drawState.descriptor);
+    const GlBufferObject& verts = asGlBufferObject(drawState.buffer);
+    const GlBufferObject& indices = asGlBufferObject(indexInfo);
+    glBindBuffer(verts.target, verts.buffer);
+    glBindBuffer(indices.target, indices.buffer);
+    applyDescriptor(drawState.descriptor);
     glDrawElements(asGlDrawMode(drawState.mode), drawState.indexCount, asGlIndexType(indexType), nullptr);
 }
 

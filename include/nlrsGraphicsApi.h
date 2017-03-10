@@ -9,7 +9,7 @@ namespace nlrs
 {
 
 using BufferInfo = u64;
-using DescriptorInfo = u32;
+using DescriptorInfo = uptr;
 using ShaderInfo = u32;
 using PipelineInfo = uptr;
 
@@ -71,11 +71,7 @@ private:
     AttributeType type_;
 };
 
-struct DescriptorOptions
-{
-    StaticArray<VertexAttribute, 6> attributes;
-    StaticArray<BufferInfo, 6> buffers;
-};
+using DescriptorOptions = StaticArray<VertexAttribute, 6>;
 
 /***
 *       ______           __
@@ -180,6 +176,7 @@ enum class IndexType
 
 struct DrawState
 {
+    BufferInfo buffer;
     DescriptorInfo descriptor;
     DrawMode mode;
     int indexCount;
@@ -262,7 +259,7 @@ public:
     void releaseBuffer(BufferInfo info);
 
     // Use a descriptor object to specify the layout of the vertex data in a buffer
-    DescriptorInfo makeDescriptor(const DescriptorOptions& vertexDescriptor);
+    DescriptorInfo makeDescriptor(const DescriptorOptions& attributes);
     void releaseDescriptor(DescriptorInfo info);
 
     ShaderInfo makeShader(const Array<ShaderStage>&);
@@ -280,7 +277,7 @@ public:
     // render a buffer object
     // this must be called after beginPass
     void applyDrawState(const DrawState& drawState);
-    void applyIndexedDrawState(const DrawState& drawState, IndexType indexType);
+    void applyIndexedDrawState(const DrawState& drawState, BufferInfo indices, IndexType indexType);
 
     // TODO: this will probably be included in a draw pass
     void clearBuffers();
