@@ -1,9 +1,11 @@
 #pragma once
 
-#include "nlrsAliases.h"
-#include "nlrsArray.h"
+#include "aliases.h"
 #include "nlrsLocator.h"
+#include "resizable_array.h"
 #include "nlrsVector.h"
+
+#include "stl/vector.h"
 
 namespace nlrs
 {
@@ -12,6 +14,7 @@ using BufferInfo = u64;
 using DescriptorInfo = uptr;
 using ShaderInfo = u32;
 using PipelineInfo = uptr;
+
 
 /***
 *       ___       ______
@@ -73,7 +76,7 @@ private:
     AttributeType type_;
 };
 
-using DescriptorOptions = StaticArray<VertexAttribute, 6>;
+using DescriptorOptions = resizable_array<VertexAttribute, 6>;
 
 /***
 *       ______           __
@@ -101,7 +104,7 @@ struct ShaderStage
 {
     ShaderType type;
     const char* source;
-    StaticArray<Uniform, 6> uniforms;
+    resizable_array<Uniform, 6> uniforms;
 };
 
 /***
@@ -236,7 +239,7 @@ public:
     BufferInfo makeBufferWithData(const BufferOptions& options, const void* data, usize dataSize);
     void setBufferData(BufferInfo info, const void* data, usize bytes);
     template<typename T>
-    BufferInfo makeBuffer(const BufferOptions& opts, const Array<T>& data)
+    BufferInfo makeBuffer(const BufferOptions& opts, const std::pmr::vector<T>& data)
     {
         NLRS_ASSERT(data.size() != 0u);
         return makeBufferWithData(opts, data.data(), sizeof(T) * data.size());
@@ -247,7 +250,7 @@ public:
         return makeBufferWithData(opts, &obj, sizeof(T));
     }
     template<typename T>
-    void setBuffer(BufferInfo info, const Array<T>& data)
+    void setBuffer(BufferInfo info, const std::pmr::vector<T>& data)
     {
         setBufferData(info, data.data(), data.size() * sizeof(T));
     }
@@ -264,7 +267,7 @@ public:
     DescriptorInfo makeDescriptor(const DescriptorOptions& attributes);
     void releaseDescriptor(DescriptorInfo info);
 
-    ShaderInfo makeShader(const Array<ShaderStage>&);
+    ShaderInfo makeShader(const std::pmr::vector<ShaderStage>&);
     // release a shader created with makeShader
     // if the shader is invalid, this does nothing
     void releaseShader(ShaderInfo info);
@@ -293,6 +296,6 @@ private:
     RenderState*    state_;
 };
 
-using GraphicsApiLocator = Locator<GraphicsApi>;
+using GraphicsApiLocator = locator<GraphicsApi>;
 
 }

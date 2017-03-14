@@ -1,9 +1,11 @@
-#include "nlrsAliases.h"
-#include "nlrsAllocator.h"
+#include "aliases.h"
+#include "memory_arena.h"
 #include "nlrsRandom.h"
 #include "nlrsLiterals.h"
-#include "nlrsArray.h"
 #include "UnitTest++/UnitTest++.h"
+
+#include "stl/vector.h"
+#include <scoped_allocator>
 
 namespace nlrs
 {
@@ -13,39 +15,39 @@ namespace nlrs
 // actually work as intended. Thus, if the allocator implementation changes, this needs
 // to be changed too.
 
-struct MemoryArena
+struct memory_container
 {
-    MemoryArena()
+    memory_container()
         : memory(std::malloc(1024 * 1024)),
         heap(memory, 1024 * 1024)
     {}
 
-    ~MemoryArena()
+    ~memory_container()
     {
         std::free(memory);
     }
 
     void* memory;
-    FreeListAllocator heap;
+    free_list_arena heap;
 };
 
-struct Header
+struct header
 {
     usize   size;
     u8      offset;
     u8      alignment;
 };
 
-struct FreeBlock
+struct free_block
 {
     usize       size;
-    FreeBlock*  next;
+    free_block*  next;
 };
 
 SUITE(FreeListAllocatorTest)
 {
 
-    TEST_FIXTURE(MemoryArena, AlignmentIsCorrect)
+    TEST_FIXTURE(memory_container, AlignmentIsCorrect)
     {
         void* block1 = heap.allocate(64, 4);
         void* block2 = heap.allocate(64, 8);
@@ -57,10 +59,10 @@ SUITE(FreeListAllocatorTest)
         NLRS_ASSERT(reinterpret_cast<uptr>(block3) % 16 == 0);
         NLRS_ASSERT(reinterpret_cast<uptr>(block4) % 32 == 0);
 
-        Header* header1 = reinterpret_cast<Header*>(block1) - 1u;
-        Header* header2 = reinterpret_cast<Header*>(block2) - 1u;
-        Header* header3 = reinterpret_cast<Header*>(block3) - 1u;
-        Header* header4 = reinterpret_cast<Header*>(block4) - 1u;
+        header* header1 = reinterpret_cast<header*>(block1) - 1u;
+        header* header2 = reinterpret_cast<header*>(block2) - 1u;
+        header* header3 = reinterpret_cast<header*>(block3) - 1u;
+        header* header4 = reinterpret_cast<header*>(block4) - 1u;
         NLRS_ASSERT(header1->alignment == 4u);
         NLRS_ASSERT(header2->alignment == 8u);
         NLRS_ASSERT(header3->alignment == 16u);
@@ -72,36 +74,37 @@ SUITE(FreeListAllocatorTest)
         heap.free(block4);
     }
 
-    TEST_FIXTURE(MemoryArena, FreeListMerge)
+    TEST_FIXTURE(memory_container, FreeListMerge)
     {
         void* block1 = heap.allocate(64);
         void* block2 = heap.allocate(64);
         void* block3 = heap.allocate(64);
 
-        CHECK_EQUAL(heap.numAllocations(), 3);
+        CHECK_EQUAL(heap.num_allocations(), 3);
 
         heap.free(block3);
         heap.free(block1);
 
-        CHECK_EQUAL(1, heap.numAllocations());
-        CHECK_EQUAL(2, heap.numFreeBlocks());
+        CHECK_EQUAL(1, heap.num_allocations());
+        CHECK_EQUAL(2, heap.num_free_blocks());
 
         heap.free(block2);
-        CHECK_EQUAL(1, heap.numFreeBlocks());
-        CHECK_EQUAL(0, heap.numAllocations());
+        CHECK_EQUAL(1, heap.num_free_blocks());
+        CHECK_EQUAL(0, heap.num_allocations());
     }
 
-    TEST_FIXTURE(MemoryArena, FreeListReallocateContainsOriginalData)
+    TEST_FIXTURE(memory_container, FreeListReallocateContainsOriginalData)
     {
-        Array<u8> array(heap);
+        auto alloc = polymorphic_allocator<u8>(heap);
+        std::pmr::vector<u8> vec(alloc);
 
-        array.resize(64);
-        std::memset(array.data(), 0, 64);
-        array[0] = 128u;
-        array[63] = 128;
+        vec.resize(64);
+        std::memset(vec.data(), 0, 64);
+        vec[0] = 128u;
+        vec[63] = 128;
 
-        CHECK_EQUAL(array[0], 128u);
-        CHECK_EQUAL(array[63], 128u);
+        CHECK_EQUAL(vec[0], 128u);
+        CHECK_EQUAL(vec[63], 128u);
     }
 }
 

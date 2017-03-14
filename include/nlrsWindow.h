@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nlrsAliases.h"
+#include "aliases.h"
 #include "nlrsLocator.h"
 #include "nlrsVector.h"
 
@@ -47,6 +47,6 @@ private:
     Vec2i size_;
 };
 
-using WindowLocator = Locator<SdlWindow>;
+using WindowLocator = locator<SdlWindow>;
 
 }

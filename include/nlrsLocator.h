@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nlrsAssert.h"
+#include "nlrs_assert.h"
 
 namespace nlrs
 {
@@ -8,7 +8,7 @@ namespace nlrs
 // there is an additional template parameter, so that we
 // can generate multiple classes of the type T
 template<typename T, unsigned N = 0>
-class Locator
+class locator
 {
 public:
     static T* get()
@@ -27,6 +27,6 @@ private:
 };
 
 template<typename T, unsigned N>
-T* Locator<T, N>::service_ = nullptr;
+T* locator<T, N>::service_ = nullptr;
 
 }

@@ -1,6 +1,5 @@
-#include "nlrsAliases.h"
-#include "nlrsAllocator.h"
-#include "nlrsArray.h"
+#include "aliases.h"
+#include "memory_arena.h"
 #include "nlrsConfiguration.h"
 #include "nlrsGraphicsApi.h"
 #include "nlrsLog.h"
@@ -14,10 +13,10 @@
 #undef near
 #undef far
 #undef DrawState
-
+#include "stl/vector.h"
+#include "stl/unordered_map.h"
 #include <cstring>
 #include <string>
-#include <unordered_map>
 #include <utility>
 
 namespace
@@ -47,7 +46,7 @@ struct GlAttribute
     const void* offset;
 };
 
-using GlDescriptor = nlrs::StaticArray<GlAttribute, 6>;
+using GlDescriptor = nlrs::resizable_array<GlAttribute, 6>;
 
 struct PipelineObject
 {
@@ -361,12 +360,12 @@ struct GraphicsApi::RenderState
     SDL_GLContext context;
     ObjectPool<PipelineObject, MaxPipelines> pipelines;
     ObjectPool<GlDescriptor, MaxDescriptors> descriptors;
-    std::unordered_map<BufferInfo, u32> boundUniformBuffers;
+    std::pmr::unordered_map<BufferInfo, u32> boundUniformBuffers;
     RenderPass renderPass;
     u32 currentUniformBinding;
     u32 dummyVao;
 
-    RenderState(IAllocator& allocator)
+    RenderState(memory_arena& allocator)
         : context(nullptr),
         pipelines(allocator),
         descriptors(allocator),
@@ -384,7 +383,7 @@ GraphicsApi::GraphicsApi()
 {
     // TODO: heap allocation required here?
     // could just use system allocator here
-    state_ = new (HeapAllocatorLocator::get()->allocate(sizeof(RenderState), alignof(RenderState))) RenderState{ *HeapAllocatorLocator::get() };
+    state_ = new (heap_memory_locator::get()->allocate(sizeof(RenderState), alignof(RenderState))) RenderState{ *heap_memory_locator::get() };
 }
 
 GraphicsApi::~GraphicsApi()
@@ -397,7 +396,7 @@ GraphicsApi::~GraphicsApi()
     glDeleteVertexArrays(1, &state_->dummyVao);
 
     state_->~RenderState();
-    HeapAllocatorLocator::get()->free(state_);
+    heap_memory_locator::get()->free(state_);
     state_ = nullptr;
 }
 
@@ -512,7 +511,7 @@ DescriptorInfo GraphicsApi::makeDescriptor(const DescriptorOptions& attributes)
     {
         if (attrib.used())
         {
-            descriptor->emplaceBack(
+            descriptor->emplace_back(
                 attrib.location(),                          // index
                 asGlAttributeElementCount(attrib.type()),   // elements
                 asGlAttributeType(attrib.type()),           // type
@@ -532,7 +531,7 @@ void GraphicsApi::releaseDescriptor(DescriptorInfo info)
     state_->descriptors.release(&asDescriptorObject(info));
 }
 
-ShaderInfo GraphicsApi::makeShader(const Array<ShaderStage>& stages)
+ShaderInfo GraphicsApi::makeShader(const std::pmr::vector<ShaderStage>& stages)
 {
     u32 program = glCreateProgram();
 
@@ -556,11 +555,11 @@ ShaderInfo GraphicsApi::makeShader(const Array<ShaderStage>& stages)
             i32 infoLogLength = 0;
             glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
             // TODO: use a stack allocator for this?
-            char* infoLogStr = (char*)SystemAllocatorLocator::get()->allocate(infoLogLength + 1);
+            char* infoLogStr = (char*)system_memory_locator::get()->allocate(infoLogLength + 1);
             infoLogStr[infoLogLength] = '\0';
             glGetShaderInfoLog(shader, infoLogLength, 0, infoLogStr);
             LOG_ERROR << "Shader compilation failed: " << infoLogStr;
-            SystemAllocatorLocator::get()->free(infoLogStr);
+            system_memory_locator::get()->free(infoLogStr);
             glDeleteShader(shader);
             glDeleteProgram(program);
 
@@ -580,9 +579,9 @@ ShaderInfo GraphicsApi::makeShader(const Array<ShaderStage>& stages)
         i32 infoLogLength;
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
         // TODO: use a stack allocator for this?
-        char* infoLogStr = (char*)SystemAllocatorLocator::get()->allocate(infoLogLength + 1);
+        char* infoLogStr = (char*)system_memory_locator::get()->allocate(infoLogLength + 1);
         glGetProgramInfoLog(program, infoLogLength, 0, infoLogStr);
-        SystemAllocatorLocator::get()->free(infoLogStr);
+        system_memory_locator::get()->free(infoLogStr);
         glDeleteProgram(program);
 
         return InvalidShader;

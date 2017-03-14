@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nlrsAssert.h"
+#include "nlrs_assert.h"
 #include "nlrsVector.h"
 #include "nlrsQuaternion.h"
 #include "nlrsGeometry.h"

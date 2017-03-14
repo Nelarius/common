@@ -1,16 +1,15 @@
 #pragma once
 
-#include "nlrsAllocator.h"
-#include "nlrsAliases.h"
-#include "fs/nlrsPath.h"
+#include "memory_arena.h"
+#include "aliases.h"
+#include "stl/filesystem.h"
 
 #include <functional>
+#include <memory>
 #include <string>
 
 namespace nlrs
 {
-
-using fs::Path;
 
 class FileSentryImpl;
 
@@ -29,9 +28,9 @@ public:
     static constexpr uptr InvalidHandle{ 0u };
 
     using EventCallback =
-        std::function<void(Handle, const Path& directory, const Path& filename, Action actions)>;
+        std::function<void(Handle, const std::fs::path& directory, const std::fs::path& filename, Action actions)>;
 
-    FileSentry(IAllocator&);
+    FileSentry(memory_arena&);
     ~FileSentry();
 
     FileSentry() = delete;
@@ -40,14 +39,14 @@ public:
     FileSentry(FileSentry&&) = delete;
     FileSentry& operator=(FileSentry&&) = delete;
 
-    Handle addSentry(const Path& directory, EventCallback callback, bool recursive = true);
+    Handle addSentry(const std::fs::path& directory, EventCallback callback, bool recursive = true);
 
     void removeSentry(Handle handle);
 
     void update();
 
 private:
-    IAllocator& allocator_;
+    memory_arena& allocator_;
     FileSentryImpl* impl_;
 };
 

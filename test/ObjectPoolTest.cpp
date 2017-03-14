@@ -14,7 +14,7 @@ SUITE(ObjectPoolTest)
     struct ObjectPoolWithAllocator
     {
         ObjectPoolWithAllocator()
-            : pool(SystemAllocator::getInstance())
+            : pool(system_arena::get_instance())
         {}
 
         ObjectPool<int, 4> pool;
@@ -23,7 +23,7 @@ SUITE(ObjectPoolTest)
     struct ObjectPoolForTestObject
     {
         ObjectPoolForTestObject()
-            : pool(SystemAllocator::getInstance())
+            : pool(system_arena::get_instance())
         {}
 
         ObjectPool<TestObject, 4> pool;
@@ -97,7 +97,7 @@ SUITE(ObjectPoolTest)
 
     TEST(PoolReturnsNullAtMaxCapacity)
     {
-        ObjectPool<int, 3> pool(SystemAllocator::getInstance());
+        ObjectPool<int, 3> pool(system_arena::get_instance());
         pool.create();
         pool.create();
         pool.create();

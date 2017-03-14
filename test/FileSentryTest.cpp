@@ -1,7 +1,7 @@
 #include "nlrsFileSentry.h"
-#include "fs/nlrsFileSystem.h"
 #include "UnitTest++/UnitTest++.h"
 
+#include <experimental/filesystem>
 #include <fstream>
 
 namespace
@@ -27,14 +27,14 @@ namespace nlrs
 struct TestDirWithSentry
 {
     TestDirWithSentry()
-        : sentry(SystemAllocator::getInstance())
+        : sentry(system_arena::get_instance())
     {
-        fs::createDirectory("test_dir");
+        std::fs::create_directory("test_dir");
     }
 
     ~TestDirWithSentry()
     {
-        fs::removeDirectory("test_dir");
+        std::remove("test_dir");
     }
 
     FileSentry sentry;
@@ -51,8 +51,8 @@ SUITE(FileSentryTest)
         auto handle = sentry.addSentry(
         "test_dir",
         [&calls, &first, &second](
-            FileSentry::Handle, const Path& directory,
-            const Path& file, FileSentry::Action action
+            FileSentry::Handle, const std::fs::path& directory,
+            const std::fs::path& file, FileSentry::Action action
             ) -> void
         {
             calls++;
@@ -80,7 +80,7 @@ SUITE(FileSentryTest)
 
         sentry.removeSentry(handle);
 
-        fs::removeFile("test_dir/test_file");
+        std::remove("test_dir/test_file");
     }
 
     TEST_FIXTURE(TestDirWithSentry, RemovingFileResultsInRemoveEvent)
@@ -93,8 +93,8 @@ SUITE(FileSentryTest)
 
         auto handle = sentry.addSentry(
         "test_dir",
-            [&fileRemoved, &actionWas, &calls](FileSentry::Handle, const Path& directory,
-                const Path& file, FileSentry::Action action) -> void
+            [&fileRemoved, &actionWas, &calls](FileSentry::Handle, const std::fs::path& directory,
+                const std::fs::path& file, FileSentry::Action action) -> void
         {
             calls++;
             fileRemoved = true;
@@ -103,7 +103,7 @@ SUITE(FileSentryTest)
 
         CHECK(handle != FileSentry::InvalidHandle);
 
-        fs::removeFile("test_dir/test_file");
+        std::remove("test_dir/test_file");
 
         sentry.update();
 
@@ -123,8 +123,8 @@ SUITE(FileSentryTest)
 
         auto handle = sentry.addSentry(
             "test_dir",
-            [&actionWas, &calls](FileSentry::Handle, const Path& directory,
-                const Path& file, FileSentry::Action action) -> void
+            [&actionWas, &calls](FileSentry::Handle, const std::fs::path& directory,
+                const std::fs::path& file, FileSentry::Action action) -> void
         {
             calls++;
             actionWas = action;
@@ -141,7 +141,7 @@ SUITE(FileSentryTest)
 
         sentry.removeSentry(handle);
 
-        fs::removeFile("test_dir/test_file");
+        std::remove("test_dir/test_file");
     }
 
     TEST_FIXTURE(TestDirWithSentry, ModifyingFileInNestedDirResultsInAddEvent)
@@ -149,15 +149,15 @@ SUITE(FileSentryTest)
         int calls = 0;
         FileSentry::Action actionWas = FileSentry::Action::Delete;
 
-        fs::createDirectory("test_dir/nested_dir");
+        std::fs::create_directory("test_dir/nested_dir");
 
         createTestFile("test_dir/nested_dir/test_file");
 
         auto handle = sentry.addSentry(
             "test_dir",
             [&actionWas, &calls](
-                FileSentry::Handle, const Path& directory,
-                const Path& file, FileSentry::Action action
+                FileSentry::Handle, const std::fs::path& directory,
+                const std::fs::path& file, FileSentry::Action action
                 ) -> void
         {
             calls++;
@@ -175,7 +175,7 @@ SUITE(FileSentryTest)
 
         sentry.removeSentry(handle);
 
-        fs::removeDirectory("test_dir/nested_dir");
+        std::remove("test_dir/nested_dir");
     }
 }
 

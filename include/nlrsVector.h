@@ -1,7 +1,7 @@
 #pragma once
 
-#include "nlrsAliases.h"
-#include "nlrsAssert.h"
+#include "aliases.h"
+#include "nlrs_assert.h"
 #include <algorithm>
 #include <cmath>
 #include <initializer_list>

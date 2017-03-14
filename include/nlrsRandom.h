@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nlrsAliases.h"
+#include "aliases.h"
 #include <random>
 
 namespace nlrs

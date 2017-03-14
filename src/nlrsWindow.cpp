@@ -1,5 +1,5 @@
 #include "nlrsWindow.h"
-#include "nlrsAssert.h"
+#include "nlrs_assert.h"
 #include "SDL.h"
 
 namespace

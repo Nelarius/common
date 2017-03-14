@@ -1,8 +1,8 @@
 #pragma once
 
-#include "nlrsAliases.h"
-#include "nlrsAllocator.h"
-#include "nlrsAssert.h"
+#include "aliases.h"
+#include "memory_arena.h"
+#include "nlrs_assert.h"
 #include "nlrsBuffer.h"
 
 #include <utility>
@@ -14,7 +14,7 @@ template<typename T, usize N = 32u>
 class ObjectPool
 {
 public:
-    ObjectPool(IAllocator& allocator);
+    ObjectPool(memory_arena& allocator);
     ObjectPool(ObjectPool&&);
     ObjectPool& operator=(ObjectPool&&);
     ~ObjectPool() = default;
@@ -45,7 +45,7 @@ private:
 };
 
 template<typename T, usize N>
-ObjectPool<T, N>::ObjectPool(IAllocator& allocator)
+ObjectPool<T, N>::ObjectPool(memory_arena& allocator)
     : buffer_(allocator, N),
     size_(0u),
     head_(nullptr)

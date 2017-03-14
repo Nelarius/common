@@ -4,7 +4,7 @@
 namespace nlrs
 {
 
-FileSentry::FileSentry(IAllocator& alloc)
+FileSentry::FileSentry(memory_arena& alloc)
     : allocator_(alloc),
     impl_(nullptr)
 {
@@ -18,7 +18,7 @@ FileSentry::~FileSentry()
 }
 
 FileSentry::Handle FileSentry::addSentry(
-    const Path& directory,
+    const std::fs::path& directory,
     FileSentry::EventCallback eventHandler,
     bool recursive)
 {

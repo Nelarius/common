@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nlrsAllocator.h"
+#include "memory_arena.h"
 #include "nlrsConfiguration.h"
 #include "../nlrsFileSentry.h"
 #include "nlrsObjectPool.h"
@@ -25,12 +25,12 @@ struct Sentry
     DWORD notifyFilter;
     std::aligned_storage<1u, alignof(u32)>::type buffer[BUFFER_SIZE];
     FileSentry::EventCallback callback;
-    Path directoryPath;
+    std::fs::path directoryPath;
     bool recursive;
     FileSentry::Handle sentryHandle;
     bool stopNow;
 
-    Sentry(HANDLE dHandle, int nFilter, FileSentry::EventCallback cb, const Path& dirPath, bool rec)
+    Sentry(HANDLE dHandle, int nFilter, FileSentry::EventCallback cb, const std::fs::path& dirPath, bool rec)
         : overlappedInfo(),
         directoryHandle(dHandle),
         notifyFilter(nFilter),
@@ -116,14 +116,14 @@ bool refreshSentry(Sentry& sentry, bool clear)
 class FileSentryImpl
 {
 public:
-    FileSentryImpl(IAllocator& alloc)
+    FileSentryImpl(memory_arena& alloc)
         : sentries_(alloc)
     {}
 
     ~FileSentryImpl() = default;
 
     FileSentry::Handle addSentry(
-        const Path& directory,
+        const std::fs::path& directory,
         FileSentry::EventCallback eventHandle,
         bool recursive)
     {
@@ -206,7 +206,7 @@ private:
 class FileSentryImpl
 {
 public:
-    FileSentryImpl(IAllocator& alloc)
+    FileSentryImpl(memory_arena& alloc)
     {
         // TODO
     }
@@ -238,7 +238,7 @@ private:
 class FileSentryImpl
 {
 public:
-    FileSentryImpl(IAllocator& alloc)
+    FileSentryImpl(memory_arena& alloc)
     {
         // TODO
     }

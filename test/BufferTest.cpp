@@ -11,7 +11,7 @@ SUITE(BufferTest)
     struct BufferWithAllocator
     {
         BufferWithAllocator()
-            : buffer(SystemAllocator::getInstance())
+            : buffer(system_arena::get_instance())
         {}
 
         Buffer<int> buffer;

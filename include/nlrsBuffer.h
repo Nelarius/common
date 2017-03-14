@@ -1,8 +1,8 @@
 #pragma once
 
-#include "nlrsAliases.h"
-#include "nlrsAllocator.h"
-#include "nlrsAssert.h"
+#include "aliases.h"
+#include "memory_arena.h"
+#include "nlrs_assert.h"
 
 namespace nlrs
 {
@@ -18,7 +18,7 @@ template< typename T, size_t alignment = alignof(T) >
 class Buffer
 {
 public:
-    Buffer(IAllocator& allocator, usize capacity = 8u);
+    Buffer(memory_arena& allocator, usize capacity = 8u);
     Buffer() = delete;
     Buffer(const Buffer&) = delete;
     Buffer& operator=(const Buffer&) = delete;
@@ -37,13 +37,13 @@ public:
     usize       capacity() const;
 
 private:
-    IAllocator&     allocator_;
+    memory_arena&     allocator_;
     u8*             buffer_;
     usize           capacity_;
 };
 
 template< typename T, size_t alignment >
-Buffer<T, alignment>::Buffer(IAllocator& allocator, usize capacity)
+Buffer<T, alignment>::Buffer(memory_arena& allocator, usize capacity)
     : allocator_(allocator),
     buffer_(nullptr),
     capacity_(0u)

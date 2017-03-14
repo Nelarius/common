@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nlrsVector.h"
-#include "nlrsAssert.h"
+#include "nlrs_assert.h"
 #include <cmath>
 
 namespace nlrs
