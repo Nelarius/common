@@ -30,7 +30,9 @@ enum class BufferType
 
 enum class BufferUsageHint
 {
-    StaticDraw
+    Static,  // the user will set the data once
+    Dynamic, // the user will set the data occasionally
+    Stream   // the user will set the data every frame
 };
 
 struct BufferOptions

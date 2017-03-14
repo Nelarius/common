@@ -117,11 +117,19 @@ GLenum asGlBufferTarget(nlrs::BufferType type)
 
 GLenum asGlUsageHint(nlrs::BufferUsageHint hint)
 {
+    // DRAW indicates that the user will write the data, but not read it
+    // READ indicates that the user didn't write the data, but they will read it
+    // COPY indicates that the user will not write or read the data
+
+    // for now, just assume the user will write data and read it
     switch (hint)
     {
-        case nlrs::BufferUsageHint::StaticDraw:    return GL_STATIC_DRAW;
-        default: NLRS_ASSERT(!"Unreachable");                return 0;
+        case nlrs::BufferUsageHint::Static:    return GL_STATIC_DRAW;
+        case nlrs::BufferUsageHint::Dynamic:   return GL_DYNAMIC_DRAW;
+        case nlrs::BufferUsageHint::Stream:    return GL_STREAM_DRAW;
     }
+    NLRS_ASSERT(!"You shouldn't reach this!");
+    return 0;
 }
 
 GLenum asGlShaderType(nlrs::ShaderType type)
