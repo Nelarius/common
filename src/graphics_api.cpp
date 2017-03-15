@@ -1,9 +1,9 @@
 #include "aliases.h"
 #include "memory_arena.h"
-#include "nlrsConfiguration.h"
-#include "nlrsGraphicsApi.h"
-#include "nlrsLog.h"
-#include "nlrsObjectPool.h"
+#include "configuration.h"
+#include "graphics_api.h"
+#include "log.h"
+#include "object_pool.h"
 #include "nlrsWindow.h"
 #include "SDL_video.h"
 
@@ -358,8 +358,8 @@ namespace nlrs
 struct GraphicsApi::RenderState
 {
     SDL_GLContext context;
-    ObjectPool<PipelineObject, MaxPipelines> pipelines;
-    ObjectPool<GlDescriptor, MaxDescriptors> descriptors;
+    object_pool<PipelineObject, MaxPipelines> pipelines;
+    object_pool<GlDescriptor, MaxDescriptors> descriptors;
     std::pmr::unordered_map<BufferInfo, u32> boundUniformBuffers;
     RenderPass renderPass;
     u32 currentUniformBinding;
@@ -383,7 +383,7 @@ GraphicsApi::GraphicsApi()
 {
     // TODO: heap allocation required here?
     // could just use system allocator here
-    state_ = new (heap_memory_locator::get()->allocate(sizeof(RenderState), alignof(RenderState))) RenderState{ *heap_memory_locator::get() };
+    state_ = new (free_list_locator::get()->allocate(sizeof(RenderState), alignof(RenderState))) RenderState{ *free_list_locator::get() };
 }
 
 GraphicsApi::~GraphicsApi()
@@ -396,7 +396,7 @@ GraphicsApi::~GraphicsApi()
     glDeleteVertexArrays(1, &state_->dummyVao);
 
     state_->~RenderState();
-    heap_memory_locator::get()->free(state_);
+    free_list_locator::get()->free(state_);
     state_ = nullptr;
 }
 

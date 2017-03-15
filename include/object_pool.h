@@ -3,7 +3,7 @@
 #include "aliases.h"
 #include "memory_arena.h"
 #include "nlrs_assert.h"
-#include "nlrsBuffer.h"
+#include "buffer.h"
 
 #include <utility>
 
@@ -11,17 +11,17 @@ namespace nlrs
 {
 
 template<typename T, usize N = 32u>
-class ObjectPool
+class object_pool
 {
 public:
-    ObjectPool(memory_arena& allocator);
-    ObjectPool(ObjectPool&&);
-    ObjectPool& operator=(ObjectPool&&);
-    ~ObjectPool() = default;
+    object_pool(memory_arena& allocator);
+    object_pool(object_pool&&);
+    object_pool& operator=(object_pool&&);
+    ~object_pool() = default;
 
-    ObjectPool() = delete;
-    ObjectPool(const ObjectPool&) = delete;
-    ObjectPool& operator=(const ObjectPool&) = delete;
+    object_pool() = delete;
+    object_pool(const object_pool&) = delete;
+    object_pool& operator=(const object_pool&) = delete;
 
     template<typename... Arg>
     T* create(Arg&&... args);
@@ -30,29 +30,29 @@ public:
     usize size() const { return size_; }
 
 private:
-    struct alignas(8) Element
+    struct alignas(8) element
     {
         union
         {
-            Element* next;
+            element* next;
             u8 buffer[sizeof(T)];
         };
     };
 
-    Buffer<Element> buffer_;
+    buffer<element> buffer_;
     usize size_;
-    Element* head_;
+    element* head_;
 };
 
 template<typename T, usize N>
-ObjectPool<T, N>::ObjectPool(memory_arena& allocator)
+object_pool<T, N>::object_pool(memory_arena& allocator)
     : buffer_(allocator, N),
     size_(0u),
     head_(nullptr)
 {}
 
 template<typename T, usize N>
-ObjectPool<T, N>::ObjectPool(ObjectPool&& other)
+object_pool<T, N>::object_pool(object_pool&& other)
     : buffer_(std::move(other.buffer_)),
     size_(other.size_),
     head_(other.head_)
@@ -62,7 +62,7 @@ ObjectPool<T, N>::ObjectPool(ObjectPool&& other)
 }
 
 template<typename T, usize N>
-ObjectPool<T, N>& ObjectPool<T, N>::operator=(ObjectPool<T, N>&& rhs)
+object_pool<T, N>& object_pool<T, N>::operator=(object_pool<T, N>&& rhs)
 {
     buffer_ = std::move(rhs.buffer_);
     size_ = rhs.size_;
@@ -76,7 +76,7 @@ ObjectPool<T, N>& ObjectPool<T, N>::operator=(ObjectPool<T, N>&& rhs)
 
 template<typename T, usize N>
 template<typename... Args>
-T* ObjectPool<T, N>::create(Args&&... args)
+T* object_pool<T, N>::create(Args&&... args)
 {
     if (size_ == buffer_.capacity())
     {
@@ -100,11 +100,11 @@ T* ObjectPool<T, N>::create(Args&&... args)
 }
 
 template<typename T, usize N>
-void ObjectPool<T, N>::release(T* obj)
+void object_pool<T, N>::release(T* obj)
 {
     NLRS_ASSERT(size_ > 0);
     obj->~T();
-    Element* elem = reinterpret_cast<Element*>(obj);
+    element* elem = reinterpret_cast<element*>(obj);
     elem->next = head_;
     head_ = elem;
     --size_;

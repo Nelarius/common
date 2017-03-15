@@ -7,7 +7,7 @@ function project_test(location)
     files {
         location.."/common/test/**.cpp",
         location.."/common/src/memory_arena.cpp",
-        location.."/common/src/nlrsFileSentry.cpp"
+        location.."/common/src/file_sentry.cpp"
     }
     includedirs { location.."/common/extern/unittest++", location.."/common/include" }
     debugdir "bin"
@@ -34,7 +34,7 @@ function project_common(location)
     files {
         location.."/common/include/**.h",
         location.."/common/src/memory_arena.cpp",
-        location.."/common/src/nlrsFileSentry.cpp"
+        location.."/common/src/file_sentry.cpp"
     }
 end
 
@@ -45,7 +45,7 @@ function project_window(location, sdl_include)
     targetdir "lib"
     includedirs { location.."/common/include/", location.."/common/extern/gl3w/include", sdl_include }
     files {
-        location.."/common/src/nlrsGraphicsApi.cpp",
+        location.."/common/src/graphics_api.cpp",
         location.."/common/src/nlrsWindow.cpp"
     }
 end

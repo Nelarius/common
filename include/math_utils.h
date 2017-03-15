@@ -6,13 +6,13 @@ namespace nlrs
 {
 
 template<typename T>
-constexpr T degreesToRadians(T degrees)
+constexpr T degrees_to_radians(T degrees)
 {
     return (degrees * T(3.14159265358979323846)) / T(180);
 }
 
 template<typename T>
-constexpr T radiansToDegrees(T radians)
+constexpr T radians_to_degrees(T radians)
 {
     return (radians * T(180)) / T(3.14159265358979323846);
 }

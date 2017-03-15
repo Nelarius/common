@@ -1,7 +1,6 @@
 #include "aliases.h"
 #include "resizable_array.h"
-#include "nlrsLiterals.h"
-#include "nlrsRandom.h"
+#include "literals.h"
 #include "UnitTest++/UnitTest++.h"
 #include <utility>
 #include <vector>
@@ -9,9 +8,9 @@
 namespace nlrs
 {
 
-SUITE(StaticArrayTest)
+SUITE(resizable_array_test)
 {
-    TEST(ConstructStaticArrayFromInitializerList)
+    TEST(construct_static_array_from_initializer_list)
     {
         resizable_array<int, 3> array{1, 2, 3};
         CHECK_EQUAL(1, array.at(0u));
@@ -20,13 +19,13 @@ SUITE(StaticArrayTest)
         CHECK_EQUAL(3_sz, array.size());
     }
 
-    TEST(DefaultConstructedStaticArrayContainsNoElements)
+    TEST(default_constructed_static_array_contains_no_elements)
     {
         resizable_array<int, 3> array;
         CHECK_EQUAL(0_sz, array.size());
     }
 
-    TEST(PushBackElementsIntoStaticArray)
+    TEST(push_back_elements_into_static_array)
     {
         resizable_array<int, 5> array;
         array.push_back(1);
@@ -38,7 +37,7 @@ SUITE(StaticArrayTest)
         CHECK_EQUAL(3_sz, array.size());
     }
 
-    TEST(IterationOverElements)
+    TEST(iteration_over_elements)
     {
         resizable_array<int, 5> array = { 1, 2, 3, 4 };
         int values[4] = { 1, 2, 3, 4 };
@@ -50,7 +49,7 @@ SUITE(StaticArrayTest)
         }
     }
 
-    TEST(ReverseIterationOverElements)
+    TEST(reverse_iteration_over_elements)
     {
         resizable_array<int, 5> array = { 1, 2, 3, 4 };
         int values[4] = { 4, 3, 2, 1 };
@@ -62,19 +61,19 @@ SUITE(StaticArrayTest)
         }
     }
 
-    TEST(BeginEndIteratorsAreTheSameForEmptyContainer)
+    TEST(begin_end_iterators_are_the_same_for_empty_container)
     {
         resizable_array<int, 3> array;
         CHECK(array.begin() == array.end());
     }
 
-    TEST(ReverseBeginReverseEndIteratorsAreTheSameForEmptyContainer)
+    TEST(reverse_begin_reverse_end_iterators_are_the_same_for_empty_container)
     {
         resizable_array<int, 3> array;
         CHECK(array.rbegin() == array.rend());
     }
 
-    TEST(IsCopyAssignable)
+    TEST(is_copy_assignable)
     {
         resizable_array<int, 3> a1;
         a1.push_back(1);
@@ -87,7 +86,7 @@ SUITE(StaticArrayTest)
         CHECK_EQUAL(a1[2], a2[2]);
     }
 
-    TEST(IsCopyConstructable)
+    TEST(is_copy_constructable)
     {
         resizable_array<int, 3> a1;
         a1.push_back(1);

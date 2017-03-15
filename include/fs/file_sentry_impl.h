@@ -1,9 +1,9 @@
 #pragma once
 
 #include "memory_arena.h"
-#include "nlrsConfiguration.h"
-#include "../nlrsFileSentry.h"
-#include "nlrsObjectPool.h"
+#include "configuration.h"
+#include "../file_sentry.h"
+#include "object_pool.h"
 
 #if NLRS_PLATFORM == NLRS_WIN32
 #define NOMINMAX
@@ -24,13 +24,13 @@ struct Sentry
     HANDLE directoryHandle;
     DWORD notifyFilter;
     std::aligned_storage<1u, alignof(u32)>::type buffer[BUFFER_SIZE];
-    FileSentry::EventCallback callback;
+    file_sentry::event_callback callback;
     std::fs::path directoryPath;
     bool recursive;
-    FileSentry::Handle sentryHandle;
+    file_sentry::handle sentryHandle;
     bool stopNow;
 
-    Sentry(HANDLE dHandle, int nFilter, FileSentry::EventCallback cb, const std::fs::path& dirPath, bool rec)
+    Sentry(HANDLE dHandle, int nFilter, file_sentry::event_callback cb, const std::fs::path& dirPath, bool rec)
         : overlappedInfo(),
         directoryHandle(dHandle),
         notifyFilter(nFilter),
@@ -38,7 +38,7 @@ struct Sentry
         callback(cb),
         directoryPath(dirPath),
         recursive(rec),
-        sentryHandle(FileSentry::InvalidHandle),
+        sentryHandle(file_sentry::invalid_handle),
         stopNow(false)
     {
         overlappedInfo = { 0 };
@@ -73,19 +73,19 @@ void CALLBACK onCompletion(DWORD errorCode, DWORD numBytesTransferred, OVERLAPPE
             int count = WideCharToMultiByte(CP_ACP, 0, notify->FileName,
                 notify->FileNameLength / sizeof(WCHAR), (LPSTR)szFile, MAX_PATH - 1, nullptr, nullptr);
 
-            FileSentry::Action action;
+            file_sentry::action action;
             switch (notify->Action)
             {
             case FILE_ACTION_RENAMED_NEW_NAME:
             case FILE_ACTION_ADDED:
-                action = FileSentry::Action::Add;
+                action = file_sentry::action::add;
                 break;
             case FILE_ACTION_RENAMED_OLD_NAME:
             case FILE_ACTION_REMOVED:
-                action = FileSentry::Action::Delete;
+                action = file_sentry::action::remove;
                 break;
             case FILE_ACTION_MODIFIED:
-                action = FileSentry::Action::Modified;
+                action = file_sentry::action::modified;
                 break;
             }
 
@@ -113,21 +113,21 @@ bool refreshSentry(Sentry& sentry, bool clear)
         != 0;
 }
 
-class FileSentryImpl
+class file_sentry_impl
 {
 public:
-    FileSentryImpl(memory_arena& alloc)
+    file_sentry_impl(memory_arena& alloc)
         : sentries_(alloc)
     {}
 
-    ~FileSentryImpl() = default;
+    ~file_sentry_impl() = default;
 
-    FileSentry::Handle addSentry(
+    file_sentry::handle add_sentry(
         const std::fs::path& directory,
-        FileSentry::EventCallback eventHandle,
+        file_sentry::event_callback eventHandle,
         bool recursive)
     {
-        Sentry* sentry = FileSentry::InvalidHandle;
+        Sentry* sentry = file_sentry::invalid_handle;
 
         HANDLE dirHandle = INVALID_HANDLE_VALUE;
         {
@@ -163,9 +163,9 @@ public:
         return reinterpret_cast<uptr>(sentry);
     }
 
-    void removeSentry(FileSentry::Handle handle)
+    void remove_sentry(file_sentry::handle handle)
     {
-        if (handle == FileSentry::InvalidHandle)
+        if (handle == file_sentry::invalid_handle)
         {
             return;
         }
@@ -195,7 +195,7 @@ public:
     }
 
 private:
-    ObjectPool<Sentry> sentries_;
+    object_pool<Sentry> sentries_;
 };
 
 #undef BUFFER_SIZE
@@ -203,21 +203,21 @@ private:
 #endif
 
 #if NLRS_OS == NLRS_MACOSX
-class FileSentryImpl
+class file_sentry_impl
 {
 public:
-    FileSentryImpl(memory_arena& alloc)
+    file_sentry_impl(memory_arena& alloc)
     {
         // TODO
     }
 
-    FileSentry::Handle addSentry(const Path& directory, FileSentry::EventCallback eventHandle, bool recursive)
+    file_sentry::handle add_sentry(const Path& directory, file_sentry::event_callback eventHandle, bool recursive)
     {
         // TODO
-        return FileSentry::InvalidHandle;
+        return file_sentry::invalid_handle;
     }
 
-    void removeSentry(FileSentry::Handle handle)
+    void remove_sentry(file_sentry::handle handle)
     {
         // TODO
     }
@@ -235,21 +235,21 @@ private:
 
 #if NLRS_OS == NLRS_LINUX
 
-class FileSentryImpl
+class file_sentry_impl
 {
 public:
-    FileSentryImpl(memory_arena& alloc)
+    file_sentry_impl(memory_arena& alloc)
     {
         // TODO
     }
 
-    FileSentry::Handle addSentry(const Path& directory, FileSentry::EventCallback eventHandle, bool recursive)
+    file_sentry::handle add_sentry(const Path& directory, file_sentry::event_callback eventHandle, bool recursive)
     {
         // TODO
-        return FileSentry::InvalidHandle;
+        return file_sentry::invalid_handle;
     }
 
-    void removeSentry(FileSentry::Handle handle)
+    void remove_sentry(file_sentry::handle handle)
     {
         // TODO
     }

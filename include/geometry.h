@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nlrsVector.h"
-#include "nlrsMatrix.h"
+#include "matrix.h"
 #include <cmath>
 #include <iterator>
 #include <limits>
@@ -13,11 +13,11 @@ namespace nlrs
 // according to the right hand rule.
 
 template<typename T>
-class Plane
+class plane
 {
 public:
-    Plane() = delete;
-    Plane(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2)
+    plane() = delete;
+    plane(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2)
         : edge1_{ p1 - p0 },
         edge2_{ p2 - p0 },
         point_{ p0 },
@@ -42,29 +42,29 @@ private:
 };
 
 template<typename T>
-struct Bounds2
+struct bounds2
 {
     Vector2<T> min{ std::numeric_limits<T>::max(), std::numeric_limits<T>::max() };
     Vector2<T> max{ std::numeric_limits<T>::min(), std::numeric_limits<T>::min() };
 
-    Bounds2() = default;
-    Bounds2(const Vector2<T>& mn, const Vector2<T>& mx)
+    bounds2() = default;
+    bounds2(const Vector2<T>& mn, const Vector2<T>& mx)
         : min(mn),
         max(mx)
     {}
 
     template<typename U>
-    Bounds2<U> cast() const
+    bounds2<U> cast() const
     {
-        return Bounds2<U>{ min.template cast<U>(), max.template cast<U>() };
+        return bounds2<U>{ min.template cast<U>(), max.template cast<U>() };
     }
 
-    bool operator==(const Bounds2<T>& rhs) const
+    bool operator==(const bounds2<T>& rhs) const
     {
         return min == rhs.min && max == rhs.max;
     }
 
-    bool operator!=(const Bounds2<T>& rhs) const
+    bool operator!=(const bounds2<T>& rhs) const
     {
         return min != rhs.min && max != rhs.max;
     }
@@ -89,35 +89,35 @@ struct Bounds2
         return false;
     }
 
-    Bounds2<T> shrink(T value) const
+    bounds2<T> shrink(T value) const
     {
         NLRS_ASSERT(max.x - min.x > value);
         NLRS_ASSERT(max.y - min.y > value);
-        return Bounds2<T>{ Vector2<T>{ min.x + value, min.y + value }, Vector2<T>{ max.x - value, max.y - value } };
+        return bounds2<T>{ Vector2<T>{ min.x + value, min.y + value }, Vector2<T>{ max.x - value, max.y - value } };
     }
 
-    Bounds2<T> inflate(T value) const
+    bounds2<T> inflate(T value) const
     {
-        return Bounds2<T>{ Vector2<T>{ min.x - value, min.y - value}, Vector2<T>{ max.x + value, max.y + value } };
+        return bounds2<T>{ Vector2<T>{ min.x - value, min.y - value}, Vector2<T>{ max.x + value, max.y + value } };
     }
 };
 
 template<typename T>
-struct Direction
+struct direction
 {
-    Direction()
+    direction()
         : v(T(0.f), T(0.f), T(0.f), T(0.f))
     {}
 
-    Direction(T x, T y, T z)
+    direction(T x, T y, T z)
         : v(x, y, z, 0.f)
     {}
 
-    Direction(const Vector3<T>& v3)
+    direction(const Vector3<T>& v3)
         : v(v3.x, v3.y, v3.z, 0.f)
     {}
 
-    Direction(std::initializer_list<T> l)
+    direction(std::initializer_list<T> l)
         : v(0.f, 0.f, 0.f, 0.f)
     {
         NLRS_ASSERT(l.size() == 3u);
@@ -141,12 +141,12 @@ struct Direction
         return v;
     }
 
-    T dot(const Direction& rhs) const
+    T dot(const direction& rhs) const
     {
         return d.dot(rhs.d);
     }
 
-    Direction cross(const Direction& rhs) const
+    direction cross(const direction& rhs) const
     {
         return d.cross(rhs.d);
     }
@@ -161,58 +161,58 @@ struct Direction
         return d.norm();
     }
 
-    T normSquared() const
+    T norm_squared() const
     {
         return d.normSquared();
     }
 
-    Direction operator+(const Direction& rhs) const
+    direction operator+(const direction& rhs) const
     {
-        return Direction(d + rhs.d);
+        return direction(d + rhs.d);
     }
 
-    Direction operator-(const Direction& rhs) const
+    direction operator-(const direction& rhs) const
     {
-        return Direction(d - rhs.d);
+        return direction(d - rhs.d);
     }
 
-    Direction operator-() const
+    direction operator-() const
     {
-        return Direction(-d);
+        return direction(-d);
     }
 
-    Direction operator*(T val) const
+    direction operator*(T val) const
     {
-        return Direction(val * d);
+        return direction(val * d);
     }
 
-    Direction operator/(T val) const
+    direction operator/(T val) const
     {
-        return Direction(d / val);
+        return direction(d / val);
     }
 
-    Direction& operator+=(const Direction& rhs)
+    direction& operator+=(const direction& rhs)
     {
         d += rhs.d;
 
         return *this;
     }
 
-    Direction& operator-=(const Direction& rhs)
+    direction& operator-=(const direction& rhs)
     {
         d -= rhs.d;
 
         return *this;
     }
 
-    Direction& operator*=(T val)
+    direction& operator*=(T val)
     {
         d *= val;
 
         return *this;
     }
 
-    Direction& operator/=(T val)
+    direction& operator/=(T val)
     {
         d /= val;
 
@@ -232,33 +232,33 @@ struct Direction
 };
 
 template<typename T>
-Direction<T> operator*(T val, const Direction<T>& rhs)
+direction<T> operator*(T val, const direction<T>& rhs)
 {
-    return Direction<T>(val * rhs.d);
+    return direction<T>(val * rhs.d);
 }
 
 template<typename T>
-Direction<T> operator*(const Matrix4<T>& m, const Direction<T>& d)
+direction<T> operator*(const matrix4<T>& m, const direction<T>& d)
 {
-    return (Direction<T>&)m * d.v;
+    return (direction<T>&)m * d.v;
 }
 
 template<typename T>
-struct Point
+struct point
 {
-    Point()
+    point()
         : v(T(0.f), T(0.f), T(0.f), T(1.f))
     {}
 
-    Point(T x, T y, T z)
+    point(T x, T y, T z)
         : v(x, y, z, 1.f)
     {}
 
-    Point(const Vector3<T>& v3)
+    point(const Vector3<T>& v3)
         : v(v3.x, v3.y, v3.z, 1.f)
     {}
 
-    Point(std::initializer_list<T> l)
+    point(std::initializer_list<T> l)
         : v(0.f, 0.f, 0.f, 1.f)
     {
         NLRS_ASSERT(l.size() == 3u);
@@ -287,82 +287,82 @@ struct Point
         return p.norm();
     }
 
-    T normSquared() const
+    T norm_squared() const
     {
         return p.normSquared();
     }
 
-    Point operator+(const Point& rhs) const
+    point operator+(const point& rhs) const
     {
-        return Point(p + rhs.p);
+        return point(p + rhs.p);
     }
 
-    Point operator+(const Direction<T>& rhs) const
+    point operator+(const direction<T>& rhs) const
     {
-        return Point(p + rhs.d);
+        return point(p + rhs.d);
     }
 
-    Point operator-(const Point& rhs) const
+    point operator-(const point& rhs) const
     {
-        return Point(p - rhs.p);
+        return point(p - rhs.p);
     }
 
-    Point operator-(const Direction<T>& rhs) const
+    point operator-(const direction<T>& rhs) const
     {
-        return Point(p - rhs.d);
+        return point(p - rhs.d);
     }
 
-    Point operator-() const
+    point operator-() const
     {
-        return Point(-p);
+        return point(-p);
     }
 
-    Point operator*(T val) const
+    point operator*(T val) const
     {
-        return Point(val * p);
+        return point(val * p);
     }
 
-    Point operator/(T val) const
+    point operator/(T val) const
     {
-        return Point(p / val);
+        return point(p / val);
     }
 
-    Point& operator+=(const Point& rhs)
+    point& operator+=(const point& rhs)
     {
         p += rhs.p;
 
         return *this;
     }
 
-    Point& operator+=(const Direction<T>& rhs)
+    point& operator+=(const direction<T>& rhs)
     {
         p += rhs.d;
 
         return *this;
     }
 
-    Point& operator-=(const Point& rhs)
+    point& operator-=(const point& rhs)
     {
         p -= rhs.p;
 
         return *this;
     }
 
-    Point& operator-=(const Direction<T>& rhs)
+    point& operator-=(const direction<T>& rhs)
     {
         p -= rhs.d;
 
         return *this;
     }
 
-    Point& operator*=(T val)
+    point& operator*=(T val)
     {
         p *= val;
 
         return *this;
     }
 
-    Point& operator/=(T val)
+    point& operator/=(T val)
     {
         p /= val;
 
@@ -382,53 +382,53 @@ struct Point
 };
 
 template<typename T>
-Point<T> operator*(T val, const Point<T>& rhs)
+point<T> operator*(T val, const point<T>& rhs)
 {
-    return Point<T>(val * rhs.p);
+    return point<T>(val * rhs.p);
 }
 
 template<typename T>
-Point<T> operator*(const Matrix4<T>& m, const Point<T>& p)
+point<T> operator*(const matrix4<T>& m, const point<T>& p)
 {
 
-    return (Point<T>&)m * p.v;
+    return (point<T>&)m * p.v;
 }
 
-using Planef = Plane<float>;
-using Bounds2f = Bounds2<float>;
-using Bounds2i = Bounds2<i32>;
-using Pointf = Point<float>;
-using Directionf = Direction<float>;
+using planef = plane<float>;
+using bounds2f = bounds2<float>;
+using bounds2i = bounds2<i32>;
+using pointf = point<float>;
+using directionf = direction<float>;
 
-class Bounds2iIterator : public std::forward_iterator_tag
+class bounds2_iterator : public std::forward_iterator_tag
 {
 public:
-    Bounds2iIterator() = delete;
-    Bounds2iIterator(const Bounds2i& bounds, const Vec2i& p)
+    bounds2_iterator() = delete;
+    bounds2_iterator(const bounds2i& bounds, const Vec2i& p)
         : bounds_(bounds),
         point_(p)
     {}
 
-    inline bool operator==(const Bounds2iIterator& rhs) const
+    inline bool operator==(const bounds2_iterator& rhs) const
     {
         return point_ == rhs.point_ && bounds_ == rhs.bounds_;
     }
 
-    inline bool operator!=(const Bounds2iIterator& rhs) const
+    inline bool operator!=(const bounds2_iterator& rhs) const
     {
         return point_ != rhs.point_ || bounds_ != rhs.bounds_;
     }
 
-    Bounds2iIterator& operator++()
+    bounds2_iterator& operator++()
     {
-        advance_();
+        advance();
         return *this;
     }
 
-    Bounds2iIterator operator++(int)
+    bounds2_iterator operator++(int)
     {
-        Bounds2iIterator was = *this;
-        advance_();
+        bounds2_iterator was = *this;
+        advance();
         return was;
     }
 
@@ -438,7 +438,7 @@ public:
     }
 
 private:
-    inline void advance_()
+    inline void advance()
     {
         ++point_.x;
         if (point_.x == bounds_.max.x)
@@ -448,16 +448,16 @@ private:
         }
     }
 
-    const Bounds2i& bounds_;
+    const bounds2i& bounds_;
     Vec2i point_;
 };
 
-inline Bounds2iIterator begin(const Bounds2i& b)
+inline bounds2_iterator begin(const bounds2i& b)
 {
-    return Bounds2iIterator(b, b.min);
+    return bounds2_iterator(b, b.min);
 }
 
-inline Bounds2iIterator end(const Bounds2i& b)
+inline bounds2_iterator end(const bounds2i& b)
 {
     Vec2i vend(b.min.x, b.max.y);
     // just end the iterator right away if the bounds are degenerate
@@ -466,24 +466,24 @@ inline Bounds2iIterator end(const Bounds2i& b)
         vend = b.min;
     }
 
-    return Bounds2iIterator(b, vend);
+    return bounds2_iterator(b, vend);
 }
 
-struct Frustum
+struct frustum
 {
-    Frustum(float fov, float aspectRatio, float n)
-        : width( aspectRatio * 2.f * n * std::tan(0.5f * fov) ),
+    frustum(float fov, float aspect_ratio, float n)
+        : width( aspect_ratio * 2.f * n * std::tan(0.5f * fov) ),
         height( 2.f * n * std::tan(0.5f * fov) ),
         near( n )
     {}
 
-    Frustum(float fov, const Vec2i& resolution, float n)
+    frustum(float fov, const Vec2i& resolution, float n)
         : width((float(resolution.x) / resolution.y) * 2.f * n * std::tan(0.5f * fov)),
         height(2.f * n * std::tan(0.5f * fov)),
         near(n)
     {}
 
-    void setVerticalFov(float angle)
+    void set_vertical_fov(float angle)
     {
         float ar = width / height;
         height = 2.f * near * std::tan(0.5f * angle);

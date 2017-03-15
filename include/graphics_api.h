@@ -1,7 +1,7 @@
 #pragma once
 
 #include "aliases.h"
-#include "nlrsLocator.h"
+#include "locator.h"
 #include "resizable_array.h"
 #include "nlrsVector.h"
 

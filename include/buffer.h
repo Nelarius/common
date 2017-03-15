@@ -15,35 +15,35 @@ namespace nlrs
  * on objects stored there.
  */
 template< typename T, size_t alignment = alignof(T) >
-class Buffer
+class buffer
 {
 public:
-    Buffer(memory_arena& allocator, usize capacity = 8u);
-    Buffer() = delete;
-    Buffer(const Buffer&) = delete;
-    Buffer& operator=(const Buffer&) = delete;
-    Buffer(Buffer&&);
-    Buffer& operator=(Buffer&&);
-    ~Buffer();
+    buffer(memory_arena& allocator, usize capacity = 8u);
+    buffer() = delete;
+    buffer(const buffer&) = delete;
+    buffer& operator=(const buffer&) = delete;
+    buffer(buffer&&);
+    buffer& operator=(buffer&&);
+    ~buffer();
 
     T*          at(usize index);
     const T*    at(usize index) const;
     T*          operator[](usize index);
     const T*    operator[](usize index) const;
 
-    // Increase the capacity of the container to at least newSize.
-    // If newSize is smaller than the current capacity, then nothing happens
+    // Increase the capacity of the container to at least new_size.
+    // If new_size is smaller than the current capacity, then nothing happens
     void        reserve(usize newSize);
     usize       capacity() const;
 
 private:
-    memory_arena&     allocator_;
+    memory_arena&   allocator_;
     u8*             buffer_;
     usize           capacity_;
 };
 
-template< typename T, size_t alignment >
-Buffer<T, alignment>::Buffer(memory_arena& allocator, usize capacity)
+template<typename T, size_t alignment>
+buffer<T, alignment>::buffer(memory_arena& allocator, usize capacity)
     : allocator_(allocator),
     buffer_(nullptr),
     capacity_(0u)
@@ -51,8 +51,8 @@ Buffer<T, alignment>::Buffer(memory_arena& allocator, usize capacity)
     reserve(capacity);
 }
 
-template< typename T, size_t alignment >
-Buffer<T, alignment>::Buffer(Buffer&& other)
+template<typename T, size_t alignment>
+buffer<T, alignment>::buffer(buffer&& other)
     : allocator_(other.allocator_),
     buffer_(other.buffer_),
     capacity_(other.capacity_)
@@ -61,8 +61,8 @@ Buffer<T, alignment>::Buffer(Buffer&& other)
     other.capacity_ = 0u;
 }
 
-template< typename T, size_t alignment  >
-Buffer<T, alignment>& Buffer<T, alignment>::operator=(Buffer&& rhs)
+template<typename T, size_t alignment>
+buffer<T, alignment>& buffer<T, alignment>::operator=(buffer&& rhs)
 {
     if (buffer_)
     {
@@ -76,8 +76,8 @@ Buffer<T, alignment>& Buffer<T, alignment>::operator=(Buffer&& rhs)
     return *this;
 }
 
-template< typename T, size_t alignment >
-Buffer<T, alignment>::~Buffer()
+template<typename T, size_t alignment>
+buffer<T, alignment>::~buffer()
 {
     if (buffer_)
     {
@@ -85,53 +85,53 @@ Buffer<T, alignment>::~Buffer()
     }
 }
 
-template< typename T, size_t alignment >
-T* Buffer<T, alignment>::at(usize index)
+template<typename T, size_t alignment>
+T* buffer<T, alignment>::at(usize index)
 {
     NLRS_ASSERT(index < capacity_);
     return reinterpret_cast<T*>(buffer_) + index;
 }
 
-template< typename T, size_t alignment >
-const T* Buffer<T, alignment>::at(usize index) const
+template<typename T, size_t alignment>
+const T* buffer<T, alignment>::at(usize index) const
 {
     NLRS_ASSERT(index < capacity_);
     return reinterpret_cast<const T*>(buffer_) + index;
 }
 
-template< typename T, size_t alignment >
-T* Buffer<T, alignment>::operator[](usize index)
+template<typename T, size_t alignment>
+T* buffer<T, alignment>::operator[](usize index)
 {
     return at(index);
 }
 
-template< typename T, size_t alignment >
-const T* Buffer<T, alignment>::operator[](usize index) const
+template<typename T, size_t alignment>
+const T* buffer<T, alignment>::operator[](usize index) const
 {
     return at(index);
 }
 
-template< typename T, size_t alignment >
-void Buffer<T, alignment>::reserve(usize newSize)
+template<typename T, size_t alignment>
+void buffer<T, alignment>::reserve(usize new_size)
 {
-    if (newSize == 0u)
+    if (new_size == 0u)
     {
         return;
     }
     if (!buffer_)
     {
-        buffer_ = (u8*)allocator_.allocate(sizeof(T) * newSize, alignment);
-        capacity_ = newSize;
+        buffer_ = (u8*)allocator_.allocate(sizeof(T) * new_size, alignment);
+        capacity_ = new_size;
     }
-    else if (capacity_ < newSize)
+    else if (capacity_ < new_size)
     {
-        buffer_ = (u8*)allocator_.reallocate(buffer_, sizeof(T) * newSize);
-        capacity_ = newSize;
+        buffer_ = (u8*)allocator_.reallocate(buffer_, sizeof(T) * new_size);
+        capacity_ = new_size;
     }
 }
 
-template< typename T, size_t alignment >
-usize Buffer<T, alignment >::capacity() const
+template<typename T, size_t alignment>
+usize buffer<T, alignment >::capacity() const
 {
     return capacity_;
 }

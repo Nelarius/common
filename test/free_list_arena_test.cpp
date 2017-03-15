@@ -1,7 +1,6 @@
 #include "aliases.h"
 #include "memory_arena.h"
-#include "nlrsRandom.h"
-#include "nlrsLiterals.h"
+#include "literals.h"
 #include "UnitTest++/UnitTest++.h"
 
 #include "stl/vector.h"
@@ -44,10 +43,10 @@ struct free_block
     free_block*  next;
 };
 
-SUITE(FreeListAllocatorTest)
+SUITE(free_list_allocator_test)
 {
 
-    TEST_FIXTURE(memory_container, AlignmentIsCorrect)
+    TEST_FIXTURE(memory_container, alignment_is_correct)
     {
         void* block1 = heap.allocate(64, 4);
         void* block2 = heap.allocate(64, 8);
@@ -74,7 +73,7 @@ SUITE(FreeListAllocatorTest)
         heap.free(block4);
     }
 
-    TEST_FIXTURE(memory_container, FreeListMerge)
+    TEST_FIXTURE(memory_container, free_list_merge)
     {
         void* block1 = heap.allocate(64);
         void* block2 = heap.allocate(64);
@@ -93,7 +92,7 @@ SUITE(FreeListAllocatorTest)
         CHECK_EQUAL(0, heap.num_allocations());
     }
 
-    TEST_FIXTURE(memory_container, FreeListReallocateContainsOriginalData)
+    TEST_FIXTURE(memory_container, free_list_reallocate_contains_original_data)
     {
         auto alloc = polymorphic_allocator<u8>(heap);
         std::pmr::vector<u8> vec(alloc);

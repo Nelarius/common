@@ -1,7 +1,7 @@
 #pragma once
 
 #include "aliases.h"
-#include "nlrsLocator.h"
+#include "locator.h"
 
 #include <scoped_allocator>
 #include <type_traits>
@@ -132,7 +132,7 @@ private:
     free_block*       free_list_head_;
 };
 
-using heap_memory_locator = locator<memory_arena, 0>;
+using free_list_locator = locator<memory_arena, 0>;
 using system_memory_locator = locator<memory_arena, 1>;
 
 // This class implements the Allocator concept in C++

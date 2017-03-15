@@ -8,59 +8,59 @@ namespace nlrs
 {
 
 template<typename T>
-class Quaternion
+class quaternion
 {
 
 public:
-    Quaternion() = default;
-    Quaternion(const Quaternion&) = default;
-    Quaternion(Quaternion&&) = default;
-    Quaternion& operator=(const Quaternion&) = default;
-    Quaternion& operator=(Quaternion&&) = default;
+    quaternion() = default;
+    quaternion(const quaternion&) = default;
+    quaternion(quaternion&&) = default;
+    quaternion& operator=(const quaternion&) = default;
+    quaternion& operator=(quaternion&&) = default;
 
-    static Quaternion<T> Identity()
+    static quaternion<T> identity()
     {
-        return Quaternion<T>{ 0.0, 0.0f, 0.0f, 1.0f };
+        return quaternion<T>{ 0.0, 0.0f, 0.0f, 1.0f };
     }
 
-    Quaternion(const Vector3<T>& i, T r)
+    quaternion(const Vector3<T>& i, T r)
         : v(i),
         w(r)
     {}
 
-    Quaternion(const Vector4<T>& vec)
+    quaternion(const Vector4<T>& vec)
         : v{ vec.x, vec.y, vec.z },
         w{ vec.w }
     {}
 
-    Quaternion(T x, T y, T z, T w)
+    quaternion(T x, T y, T z, T w)
         : v(x, y, z),
         w(w)
     {}
 
     // get the rotation between two normalized axes
-    static Quaternion<T> rotationBetweenAxes(Vector3<T> s, Vector3<T> t)
+    static quaternion<T> rotation_between_axes(Vector3<T> s, Vector3<T> t)
     {
         NLRS_ASSERT(s.norm() - T(1.0) < T(0.00001));
         NLRS_ASSERT(t.norm() - T(1.0) < T(0.00001));
         T e = s.dot(t);
         T div = T(1.0) / std::sqrt(T(2.0) * (T(1.0) + e));
-        return Quaternion<T> {
+        return quaternion<T> {
             s.cross(t).normalized() * div, T(2.0) * div
         };
     }
 
-    static Quaternion<T> fromAxisAngle(Vector3<T> axis, T angle)
+    static quaternion<T> from_axis_angle(Vector3<T> axis, T angle)
     {
         axis.normalize();
         axis = axis * std::sin(T(0.5) * angle);
-        return Quaternion<T>{ axis, std::cos(T(0.5) * angle) };
+        return quaternion<T>{ axis, std::cos(T(0.5) * angle) };
     }
 
     template<typename D>
-    Quaternion<D> cast() const
+    quaternion<D> cast() const
     {
-        return Quaternion<D>{ D(v.x), D(v.y), D(v.z), D(w) };
+        return quaternion<D>{ D(v.x), D(v.y), D(v.z), D(w) };
     }
 
     operator Vector4<T>() const
@@ -68,12 +68,12 @@ public:
         return Vector4<T> {v.x, v.y, v.z, w};
     }
 
-    Quaternion<T> conjugate() const
+    quaternion<T> conjugate() const
     {
-        return Quaternion<T>{ -v.x, -v.y, -v.z, w };
+        return quaternion<T>{ -v.x, -v.y, -v.z, w };
     }
 
-    Quaternion<T> inverse() const
+    quaternion<T> inverse() const
     {
         T factor = 1.0f / normSquared();
         return conjugate() * factor;
@@ -84,15 +84,15 @@ public:
         return std::sqrt(v.normSquared() + w*w);
     }
 
-    T normSquared() const
+    T norm_squared() const
     {
         return v.normSquared() + w*w;
     }
 
-    Quaternion<T> normalized() const
+    quaternion<T> normalized() const
     {
         T n = T(1.0) / norm();
-        return Quaternion<T>{
+        return quaternion<T>{
             v.x*n, v.y*n, v.z*n, w*n
         };
     }
@@ -106,17 +106,17 @@ public:
         w *= n;
     }
 
-    Quaternion<T> operator*(const Quaternion& rhs) const
+    quaternion<T> operator*(const quaternion& rhs) const
     {
-        return Quaternion<T> {
+        return quaternion<T> {
             v.cross(rhs.v) + rhs.w*v + w*rhs.v,
                 w*rhs.w - v.dot(rhs.v)
         };
     }
 
-    Quaternion<T> operator*(T rhs) const
+    quaternion<T> operator*(T rhs) const
     {
-        return Quaternion<T> {
+        return quaternion<T> {
             rhs*v.x,
                 rhs*v.y,
                 rhs*v.z,
@@ -124,9 +124,9 @@ public:
         };
     }
 
-    Quaternion<T> multiply(const Quaternion& rhs) const
+    quaternion<T> multiply(const quaternion& rhs) const
     {
-        return Quaternion<T> {
+        return quaternion<T> {
             v.cross(rhs.v) + rhs.w*v + w*rhs.v,
                 w*rhs.w - v.dot(rhs.v)
         };
@@ -135,7 +135,7 @@ public:
     Vector4<T> rotate(const Vector4<T>& rhs) const
     {
         // this could use optimization to get rid of the intermediates...
-        Quaternion<T> intermediate = this->multiply(*reinterpret_cast<const Quaternion<T>*>(&rhs));
+        quaternion<T> intermediate = this->multiply(*reinterpret_cast<const quaternion<T>*>(&rhs));
         return intermediate.multiply(this->conjugate());
     }
 
@@ -185,12 +185,12 @@ public:
 };
 
 template<typename T>
-Quaternion<T> operator*(T lhs, const Quaternion<T>& rhs)
+quaternion<T> operator*(T lhs, const quaternion<T>& rhs)
 {
-    return Quaternion<T>{ lhs*rhs.v.x, lhs*rhs.v.y, lhs*rhs.v.z, lhs*rhs.w };
+    return quaternion<T>{ lhs*rhs.v.x, lhs*rhs.v.y, lhs*rhs.v.z, lhs*rhs.w };
 }
 
-using Quatf = Quaternion<float>;
-using Quatd = Quaternion<double>;
+using quatf = quaternion<float>;
+using quatd = quaternion<double>;
 
 }

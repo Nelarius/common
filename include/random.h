@@ -7,11 +7,11 @@ namespace nlrs
 {
 
 template<typename T, bool IsIntegral>
-class UniformDistribution
+class uniform_distribution
 {
 public:
-    UniformDistribution() = default;
-    ~UniformDistribution() = default;
+    uniform_distribution() = default;
+    ~uniform_distribution() = default;
 
     T operator()(std::minstd_rand& generator, T a, T b)
     {
@@ -24,11 +24,11 @@ private:
 };
 
 template<typename T>
-class UniformDistribution<T, false>
+class uniform_distribution<T, false>
 {
 public:
-    UniformDistribution() = default;
-    ~UniformDistribution() = default;
+    uniform_distribution() = default;
+    ~uniform_distribution() = default;
 
     T operator()(std::minstd_rand& generator, T a, T b)
     {
@@ -43,11 +43,11 @@ private:
 // A minimum standard Park & Miller random number generator
 // for uniform distributions
 template<typename T>
-class Random
+class random
 {
 public:
-    Random() = default;
-    ~Random() = default;
+    random() = default;
+    ~random() = default;
 
     void seed(u32 s)
     {
@@ -72,7 +72,7 @@ public:
 
 private:
     std::minstd_rand generator_;
-    UniformDistribution<T, std::is_integral<T>::value> distribution_;
+    uniform_distribution<T, std::is_integral<T>::value> distribution_;
 };
 
 }
