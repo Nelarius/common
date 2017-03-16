@@ -3,7 +3,7 @@
 #include "aliases.h"
 #include "locator.h"
 #include "resizable_array.h"
-#include "nlrsVector.h"
+#include "vector.h"
 
 #include "stl/vector.h"
 
@@ -210,7 +210,7 @@ public:
     struct PassOptions
     {
         // TODO: render target
-        Vec3f clearColor{ 0.f, 0.f, 0.f };
+        vec3f clearColor{ 0.f, 0.f, 0.f };
     };
 
     struct Options

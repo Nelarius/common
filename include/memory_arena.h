@@ -137,6 +137,9 @@ using system_memory_locator = locator<memory_arena, 1>;
 
 // This class implements the Allocator concept in C++
 // http://en.cppreference.com/w/cpp/memory/allocator
+//
+// read more about using custom allocators here:
+// https://rawgit.com/google/cxx-std-draft/allocator-paper/allocator_user_guide.html#propagation
 template<class T>
 class polymorphic_allocator
 {

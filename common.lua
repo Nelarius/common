@@ -46,7 +46,7 @@ function project_window(location, sdl_include)
     includedirs { location.."/common/include/", location.."/common/extern/gl3w/include", sdl_include }
     files {
         location.."/common/src/graphics_api.cpp",
-        location.."/common/src/nlrsWindow.cpp"
+        location.."/common/src/sdl_window.cpp"
     }
 end
 

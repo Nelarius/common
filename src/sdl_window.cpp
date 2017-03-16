@@ -1,11 +1,11 @@
-#include "nlrsWindow.h"
+#include "sdl_window.h"
 #include "nlrs_assert.h"
 #include "SDL.h"
 
 namespace
 {
 
-class SdlGlobal
+class sdl_global_resource
 {
 public:
     static void init()
@@ -32,36 +32,36 @@ private:
     static int references_;
 };
 
-int SdlGlobal::references_ = 0;
+int sdl_global_resource::references_ = 0;
 
 }
 
 namespace nlrs
 {
 
-SdlWindow::SdlWindow()
+sdl_window::sdl_window()
     : window_(nullptr),
     size_(0, 0)
 {
-    SdlGlobal::init();
+    sdl_global_resource::init();
 }
 
-SdlWindow::~SdlWindow()
+sdl_window::~sdl_window()
 {
     if (window_)
     {
         SDL_DestroyWindow(window_);
     }
-    SdlGlobal::quit();
+    sdl_global_resource::quit();
 }
 
-bool SdlWindow::initialize(const Options& opts)
+bool sdl_window::initialize(const options& opts)
 {
-    size_ = Vec2i(opts.width, opts.height);
+    size_ = vec2i(opts.width, opts.height);
 
-    static_assert(Resizable == SDL_WINDOW_RESIZABLE, "Invalid SdlWindow::Flag value");
-    static_assert(Opengl == SDL_WINDOW_OPENGL, "Invalid SdlWindow::Flag value");
-    static_assert(HighDpi == SDL_WINDOW_ALLOW_HIGHDPI, "Invalid SdlWindow::Flag value");
+    static_assert(resizable == SDL_WINDOW_RESIZABLE, "Invalid sdl_window::flag value");
+    static_assert(opengl == SDL_WINDOW_OPENGL, "Invalid sdl_window::flag value");
+    static_assert(highdpi == SDL_WINDOW_ALLOW_HIGHDPI, "Invalid sdl_window::flag value");
     NLRS_ASSERT(window_ == nullptr);
     window_ = SDL_CreateWindow(
         opts.name.c_str(),

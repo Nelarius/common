@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nlrs_assert.h"
-#include "nlrsVector.h"
+#include "vector.h"
 #include "quaternion.h"
 #include "geometry.h"
 #include <sstream>
@@ -14,21 +14,21 @@ namespace nlrs
 {
 
 template<typename T>
-std::ostream& operator<<(std::ostream& os, const Vector2<T>& v)
+std::ostream& operator<<(std::ostream& os, const vector2<T>& v)
 {
     os << "(" << v.x << ", " << v.y << ")";
     return os;
 }
 
 template<typename T>
-std::ostream& operator<<(std::ostream& os, const Vector3<T>& v)
+std::ostream& operator<<(std::ostream& os, const vector3<T>& v)
 {
     os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
     return os;
 }
 
 template<typename T>
-std::ostream& operator<<(std::ostream& os, const Vector4<T>& v)
+std::ostream& operator<<(std::ostream& os, const vector4<T>& v)
 {
     os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
     return os;

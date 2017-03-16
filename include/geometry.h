@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nlrsVector.h"
+#include "vector.h"
 #include "matrix.h"
 #include <cmath>
 #include <iterator>
@@ -17,38 +17,38 @@ class plane
 {
 public:
     plane() = delete;
-    plane(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2)
+    plane(const vector3<T>& p0, const vector3<T>& p1, const vector3<T>& p2)
         : edge1_{ p1 - p0 },
         edge2_{ p2 - p0 },
         point_{ p0 },
         normal_{ edge1_.cross(edge2_).normalized() }
     {}
 
-    const Vector3<T> point() const
+    const vector3<T> point() const
     {
         return point_;
     }
 
-    const Vector3<T> normal() const
+    const vector3<T> normal() const
     {
         return normal_;
     }
 
 private:
-    Vector3<T> edge1_;
-    Vector3<T> edge2_;
-    Vector3<T> point_;
-    Vector3<T> normal_;
+    vector3<T> edge1_;
+    vector3<T> edge2_;
+    vector3<T> point_;
+    vector3<T> normal_;
 };
 
 template<typename T>
 struct bounds2
 {
-    Vector2<T> min{ std::numeric_limits<T>::max(), std::numeric_limits<T>::max() };
-    Vector2<T> max{ std::numeric_limits<T>::min(), std::numeric_limits<T>::min() };
+    vector2<T> min{ std::numeric_limits<T>::max(), std::numeric_limits<T>::max() };
+    vector2<T> max{ std::numeric_limits<T>::min(), std::numeric_limits<T>::min() };
 
     bounds2() = default;
-    bounds2(const Vector2<T>& mn, const Vector2<T>& mx)
+    bounds2(const vector2<T>& mn, const vector2<T>& mx)
         : min(mn),
         max(mx)
     {}
@@ -69,17 +69,17 @@ struct bounds2
         return min != rhs.min && max != rhs.max;
     }
 
-    Vector2<T> center() const
+    vector2<T> center() const
     {
         return T(0.5) * (min + max);
     }
 
-    Vector2<T> extent() const
+    vector2<T> extent() const
     {
         return max - min;
     }
 
-    bool contains(const Vector2<T>& p)
+    bool contains(const vector2<T>& p)
     {
         if (p.x > min.x && p.x < max.x && p.y > min.y && p.y < max.y)
         {
@@ -93,12 +93,12 @@ struct bounds2
     {
         NLRS_ASSERT(max.x - min.x > value);
         NLRS_ASSERT(max.y - min.y > value);
-        return bounds2<T>{ Vector2<T>{ min.x + value, min.y + value }, Vector2<T>{ max.x - value, max.y - value } };
+        return bounds2<T>{ vector2<T>{ min.x + value, min.y + value }, vector2<T>{ max.x - value, max.y - value } };
     }
 
     bounds2<T> inflate(T value) const
     {
-        return bounds2<T>{ Vector2<T>{ min.x - value, min.y - value}, Vector2<T>{ max.x + value, max.y + value } };
+        return bounds2<T>{ vector2<T>{ min.x - value, min.y - value}, vector2<T>{ max.x + value, max.y + value } };
     }
 };
 
@@ -113,7 +113,7 @@ struct direction
         : v(x, y, z, 0.f)
     {}
 
-    direction(const Vector3<T>& v3)
+    direction(const vector3<T>& v3)
         : v(v3.x, v3.y, v3.z, 0.f)
     {}
 
@@ -127,16 +127,16 @@ struct direction
             v.data[i] = t;
             ++i;
         }
-        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(v.data)));
-        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(v.data)));
+        NLRS_ASSERT(!(detail::number<T, std::is_floating_point<T>::value>::has_nans(v.data)));
+        NLRS_ASSERT(!(detail::number<T, std::is_floating_point<T>::value>::has_infs(v.data)));
     }
 
-    operator Vector3<T>() const
+    operator vector3<T>() const
     {
         return d;
     }
 
-    operator Vector4<T>() const
+    operator vector4<T>() const
     {
         return v;
     }
@@ -226,8 +226,8 @@ struct direction
 
     union
     {
-        Vector3<T> d;
-        Vector4<T> v;
+        vector3<T> d;
+        vector4<T> v;
     };
 };
 
@@ -254,7 +254,7 @@ struct point
         : v(x, y, z, 1.f)
     {}
 
-    point(const Vector3<T>& v3)
+    point(const vector3<T>& v3)
         : v(v3.x, v3.y, v3.z, 1.f)
     {}
 
@@ -268,16 +268,16 @@ struct point
             v.data[i] = t;
             ++i;
         }
-        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasNans(v.data)));
-        NLRS_ASSERT(!(detail::Number<T, std::is_floating_point<T>::value>::hasInfs(v.data)));
+        NLRS_ASSERT(!(detail::number<T, std::is_floating_point<T>::value>::has_nans(v.data)));
+        NLRS_ASSERT(!(detail::number<T, std::is_floating_point<T>::value>::has_infs(v.data)));
     }
 
-    operator Vector3<T>() const
+    operator vector3<T>() const
     {
         return p;
     }
 
-    operator Vector4<T>() const
+    operator vector4<T>() const
     {
         return v;
     }
@@ -376,8 +376,8 @@ struct point
 
     union
     {
-        Vector3<T> p;
-        Vector4<T> v;
+        vector3<T> p;
+        vector4<T> v;
     };
 };
 
@@ -404,7 +404,7 @@ class bounds2_iterator : public std::forward_iterator_tag
 {
 public:
     bounds2_iterator() = delete;
-    bounds2_iterator(const bounds2i& bounds, const Vec2i& p)
+    bounds2_iterator(const bounds2i& bounds, const vec2i& p)
         : bounds_(bounds),
         point_(p)
     {}
@@ -432,7 +432,7 @@ public:
         return was;
     }
 
-    Vec2i operator*() const
+    vec2i operator*() const
     {
         return point_;
     }
@@ -449,7 +449,7 @@ private:
     }
 
     const bounds2i& bounds_;
-    Vec2i point_;
+    vec2i point_;
 };
 
 inline bounds2_iterator begin(const bounds2i& b)
@@ -459,7 +459,7 @@ inline bounds2_iterator begin(const bounds2i& b)
 
 inline bounds2_iterator end(const bounds2i& b)
 {
-    Vec2i vend(b.min.x, b.max.y);
+    vec2i vend(b.min.x, b.max.y);
     // just end the iterator right away if the bounds are degenerate
     if (b.min.x >= b.max.x || b.min.y >= b.max.y)
     {
@@ -477,7 +477,7 @@ struct frustum
         near( n )
     {}
 
-    frustum(float fov, const Vec2i& resolution, float n)
+    frustum(float fov, const vec2i& resolution, float n)
         : width((float(resolution.x) / resolution.y) * 2.f * n * std::tan(0.5f * fov)),
         height(2.f * n * std::tan(0.5f * fov)),
         near(n)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nlrsVector.h"
+#include "vector.h"
 #include "nlrs_assert.h"
 #include <cmath>
 
@@ -23,12 +23,12 @@ public:
         return quaternion<T>{ 0.0, 0.0f, 0.0f, 1.0f };
     }
 
-    quaternion(const Vector3<T>& i, T r)
+    quaternion(const vector3<T>& i, T r)
         : v(i),
         w(r)
     {}
 
-    quaternion(const Vector4<T>& vec)
+    quaternion(const vector4<T>& vec)
         : v{ vec.x, vec.y, vec.z },
         w{ vec.w }
     {}
@@ -39,7 +39,7 @@ public:
     {}
 
     // get the rotation between two normalized axes
-    static quaternion<T> rotation_between_axes(Vector3<T> s, Vector3<T> t)
+    static quaternion<T> rotation_between_axes(vector3<T> s, vector3<T> t)
     {
         NLRS_ASSERT(s.norm() - T(1.0) < T(0.00001));
         NLRS_ASSERT(t.norm() - T(1.0) < T(0.00001));
@@ -50,7 +50,7 @@ public:
         };
     }
 
-    static quaternion<T> from_axis_angle(Vector3<T> axis, T angle)
+    static quaternion<T> from_axis_angle(vector3<T> axis, T angle)
     {
         axis.normalize();
         axis = axis * std::sin(T(0.5) * angle);
@@ -63,9 +63,9 @@ public:
         return quaternion<D>{ D(v.x), D(v.y), D(v.z), D(w) };
     }
 
-    operator Vector4<T>() const
+    operator vector4<T>() const
     {
-        return Vector4<T> {v.x, v.y, v.z, w};
+        return vector4<T> {v.x, v.y, v.z, w};
     }
 
     quaternion<T> conjugate() const
@@ -132,14 +132,14 @@ public:
         };
     }
 
-    Vector4<T> rotate(const Vector4<T>& rhs) const
+    vector4<T> rotate(const vector4<T>& rhs) const
     {
         // this could use optimization to get rid of the intermediates...
         quaternion<T> intermediate = this->multiply(*reinterpret_cast<const quaternion<T>*>(&rhs));
         return intermediate.multiply(this->conjugate());
     }
 
-    Vector3<T> axis() const
+    vector3<T> axis() const
     {
         T angle = this->angle();
         return v * (T(1.0) / sin(angle / T(2.0)));
@@ -150,37 +150,37 @@ public:
         return T(2.0 * acos(w));
     }
 
-    Vector3<T> xaxis() const
+    vector3<T> xaxis() const
     {
         T n = T(2.f) / norm();
-        return Vector3<T> {
+        return vector3<T> {
             1.f - n*(v.y*v.y + v.z*v.z),
                 n*(v.x*v.y + w*v.z),
                 n*(v.x*v.z - w*v.y)
         };
     }
 
-    Vector3<T> yaxis() const
+    vector3<T> yaxis() const
     {
         T n = T(2.f) / norm();
-        return Vector3<T> {
+        return vector3<T> {
             n*(v.x*v.y - w*v.z),
                 1.f - n*(v.x*v.x + v.z*v.z),
                 n*(v.y*v.z + w*v.x)
         };
     }
 
-    Vector3<T> zaxis() const
+    vector3<T> zaxis() const
     {
         T n = T(2.f) / norm();
-        return Vector3<T>{
+        return vector3<T>{
             n*(v.x*v.z + w*v.y),
                 n*(v.y*v.z - w*v.x),
                 1.f - n*(v.x*v.x + v.y*v.y)
         };
     }
 
-    Vector3<T>  v{};    // the imaginary part
+    vector3<T>  v{};    // the imaginary part
     T           w{ T(1.0) }; // the real part
 };
 

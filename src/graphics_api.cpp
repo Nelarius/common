@@ -4,7 +4,7 @@
 #include "graphics_api.h"
 #include "log.h"
 #include "object_pool.h"
-#include "nlrsWindow.h"
+#include "sdl_window.h"
 #include "SDL_video.h"
 
 // gl3w.h includes glcorearb.h, which includes the dreaded windows.h
@@ -415,7 +415,7 @@ bool GraphicsApi::initialize(const Options& opts)
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, opts.msBuffers);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, opts.msSamples);
 
-    state_->context = SDL_GL_CreateContext(WindowLocator::get()->ptr());
+    state_->context = SDL_GL_CreateContext(window_locator::get()->ptr());
 
     if (state_->context == NULL)
     {
@@ -709,7 +709,7 @@ void GraphicsApi::clearBuffers()
 void GraphicsApi::swapBuffers()
 {
     NLRS_ASSERT(!state_->renderPass.active);
-    SDL_GL_SwapWindow(WindowLocator::get()->ptr());
+    SDL_GL_SwapWindow(window_locator::get()->ptr());
 }
 
 }

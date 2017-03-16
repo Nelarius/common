@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nlrsVector.h"
+#include "vector.h"
 #include "quaternion.h"
 #include <cmath>
 
@@ -26,7 +26,7 @@ struct matrix2
         }
     }
 
-    matrix2(const Vector2<T>& r1, const Vector2<T>& r2)
+    matrix2(const vector2<T>& r1, const vector2<T>& r2)
         : data{ r1.x, r1.y, r2.x, r2.y }
     {}
 
@@ -35,9 +35,9 @@ struct matrix2
         return data[0] + data[3];
     }
 
-    Vector2<T> operator*(const Vector2<T>& v)
+    vector2<T> operator*(const vector2<T>& v)
     {
-        return Vector2<T> {
+        return vector2<T> {
             data[0] * v.x + data[1] * v.y,
                 data[2] * v.y + data[3] * v.y
         };
@@ -125,7 +125,7 @@ struct matrix3
         : data{ T(1.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0), T(0.0), T(0.0), T(1.0) }
     {}
 
-    matrix3(const Vector3<T>& r1, const Vector3<T>& r2, const Vector3<T>& r3)
+    matrix3(const vector3<T>& r1, const vector3<T>& r2, const vector3<T>& r3)
         : data{ r1.x, r1.y, r1.z, r2.x, r2.y, r2.z, r3.x, r3.y, r3.z }
     {}
 
@@ -134,9 +134,9 @@ struct matrix3
         return data[0] + data[4] + data[8];
     }
 
-    Vector3<T> operator*(const Vector3<T>& v) const
+    vector3<T> operator*(const vector3<T>& v) const
     {
-        return Vector3<T> {
+        return vector3<T> {
             data[0] * v.x + data[1] * v.y + data[2] * v.z,
                 data[3] * v.x + data[4] * v.y + data[5] * v.z,
                 data[6] * v.x + data[7] * v.y + data[8] * v.z
@@ -242,11 +242,11 @@ struct matrix4
         : data{ T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(1.0) }
     {}
 
-    matrix4(const Vector4<T>& r1, const Vector4<T>& r2, const Vector4<T>& r3, const Vector4<T>& r4)
+    matrix4(const vector4<T>& r1, const vector4<T>& r2, const vector4<T>& r3, const vector4<T>& r4)
         : data{ r1.x, r1.y, r1.z, r1.w, r2.x, r2.y, r2.z, r2.w, r3.x, r3.y, r3.z, r3.w, r4.x, r4.y, r4.z, r4.w }
     {}
 
-    static matrix4<T> translation(const Vector3<T>& v)
+    static matrix4<T> translation(const vector3<T>& v)
     {
         return matrix4<T>{
             T(1.0), T(0.0), T(0.0), v.x,
@@ -267,7 +267,7 @@ struct matrix4
         };
     }
 
-    static matrix4<T> scale(const Vector3<T>& s)
+    static matrix4<T> scale(const vector3<T>& s)
     {
         return matrix4<T> {
             s.x, T(0.0), T(0.0), T(0.0),
@@ -277,14 +277,6 @@ struct matrix4
         };
     }
 
-    /**
-     * @brief Symmetric orthographic projection matrix
-     * @param width
-     * @param height
-     * @param near
-     * @param far
-     * @return
-     */
     static matrix4<T> orthographic(T width, T height, T near, T far)
     {
         return matrix4<T>{
@@ -295,14 +287,6 @@ struct matrix4
         };
     }
 
-    /**
-     * @brief Symmetric perspective projection matrix
-     * @param vfov The vertical field of view
-     * @param ar The aspect ratio of the projection plane
-     * @param n The near plane
-     * @param f The far plane
-     * @return The OpenGL perspective projection matrix
-     */
     static matrix4<T> perspective(T vfov, T ar, T n, T f)
     {
         T h = T(2.0) * n * tan(T(0.5) * vfov);
@@ -320,9 +304,9 @@ struct matrix4
         return data[0] + data[5] + data[10] + data[15];
     }
 
-    Vector4<T> operator*(const Vector4<T>& v) const
+    vector4<T> operator*(const vector4<T>& v) const
     {
-        return Vector4<T> {
+        return vector4<T> {
             data[0] * v.x + data[1] * v.y + data[2] * v.z + data[3] * v.w,
                 data[4] * v.x + data[5] * v.y + data[6] * v.z + data[7] * v.w,
                 data[8] * v.x + data[9] * v.y + data[10] * v.z + data[11] * v.w,

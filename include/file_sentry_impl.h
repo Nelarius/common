@@ -2,7 +2,7 @@
 
 #include "memory_arena.h"
 #include "configuration.h"
-#include "../file_sentry.h"
+#include "file_sentry.h"
 #include "object_pool.h"
 
 #if NLRS_PLATFORM == NLRS_WIN32
