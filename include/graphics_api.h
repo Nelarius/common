@@ -10,11 +10,10 @@
 namespace nlrs
 {
 
-using BufferInfo = u64;
-using DescriptorInfo = uptr;
-using ShaderInfo = u32;
-using PipelineInfo = uptr;
-
+using buffer_handle = u64;
+using descriptor_handle = uptr;
+using shader_handle = u32;
+using pipeline_handle = uptr;
 
 /***
 *       ___       ______
@@ -24,43 +23,43 @@ using PipelineInfo = uptr;
 *
 */
 
-enum class BufferType
+enum class buffer_type
 {
-    Array,
-    IndexArray,
-    Uniform
+    array,
+    index_array,
+    uniform
 };
 
-enum class BufferUsageHint
+enum class buffer_usage_hint
 {
-    Static,  // the user will set the data once
-    Dynamic, // the user will set the data occasionally
-    Stream   // the user will set the data every frame
+    constant, // the user will set the data once
+    dynamic,  // the user will set the data occasionally
+    stream    // the user will set the data every frame
 };
 
-struct BufferOptions
+struct buffer_options
 {
-    BufferType      type;
-    BufferUsageHint hint;
+    buffer_type       type;
+    buffer_usage_hint hint;
 };
 
-enum class AttributeType
+enum class attribute_type
 {
-    Float1,
-    Float2,
-    Float3,
-    Float4
+    float1,
+    float2,
+    float3,
+    float4
 };
 
-struct VertexAttribute
+struct vertex_attribute
 {
-    VertexAttribute(i32 location, AttributeType type)
+    vertex_attribute(i32 location, attribute_type type)
         : used_(true),
         location_(location),
         type_(type)
     {}
 
-    VertexAttribute(AttributeType type)
+    vertex_attribute(attribute_type type)
         : used_(false),
         location_(-1),
         type_(type)
@@ -68,15 +67,15 @@ struct VertexAttribute
 
     inline bool used() const { return used_; }
     inline i32 location() const { return location_; }
-    inline AttributeType type() const { return type_; }
+    inline attribute_type type() const { return type_; }
 
 private:
     bool used_;
     i32 location_;
-    AttributeType type_;
+    attribute_type type_;
 };
 
-using DescriptorOptions = resizable_array<VertexAttribute, 6>;
+using descriptor_options = resizable_array<vertex_attribute, 6>;
 
 /***
 *       ______           __
@@ -86,25 +85,25 @@ using DescriptorOptions = resizable_array<VertexAttribute, 6>;
 *
 */
 
-enum class ShaderType
+enum class shader_type
 {
-    Vertex,
-    Fragment,
-    Geometry,
-    Compute
+    vertex,
+    fragment,
+    geometry,
+    compute
 };
 
-struct Uniform
+struct uniform
 {
-    BufferInfo buffer;
+    buffer_handle buffer;
     u32 blockIndex;
 };
 
-struct ShaderStage
+struct shader_stage
 {
-    ShaderType type;
+    shader_type type;
     const char* source;
-    resizable_array<Uniform, 6> uniforms;
+    resizable_array<uniform, 6> uniforms;
 };
 
 /***
@@ -116,46 +115,46 @@ struct ShaderStage
 */
 
 // for OpenGL correspondance, see http://docs.gl/gl4/glDepthFunc
-enum class ComparisonFunction
+enum class comparison_function
 {
-    Never,
-    Less,
-    Equal,
-    Lequal,
-    Greater,
-    NotEqual,
-    Gequal,
-    Always
+    never,
+    less,
+    equal,
+    lequal,
+    greater,
+    not_equal,
+    gequal,
+    always
 };
 
 // for OpenGL correspondance, see http://docs.gl/gl4/glBlendEquation
 // TODO: see which one of these OpenGL uses by default
-enum class BlendFunction
+enum class blend_function
 {
-    Add,
-    Subtract,
-    ReverseSubtract
+    add,
+    subtract,
+    reverse_subtract
 };
 
-struct PipelineOptions
+struct pipeline_options
 {
-    PipelineOptions(ShaderInfo shaderInfo)
+    pipeline_options(shader_handle shaderInfo)
         : shader(shaderInfo),
-        depthTestEnabled(true),
-        cullingEnabled(true),
-        scissorTestEnabled(false),
-        blendEnabled(false),
-        depthComparisonFunction(ComparisonFunction::Less),
-        blendFunction(BlendFunction::Add)   // TODO: see which one of these OpenGL uses by default
+        depth_test_enabled(true),
+        culling_enabled(true),
+        scissor_test_enabled(false),
+        blend_enabled(false),
+        depth_comparison_func(comparison_function::less),
+        blend_func(blend_function::add)   // TODO: see which one of these OpenGL uses by default
     {}
 
-    ShaderInfo shader;
-    bool depthTestEnabled;
-    bool cullingEnabled;
-    bool scissorTestEnabled;
-    bool blendEnabled;
-    ComparisonFunction depthComparisonFunction;
-    BlendFunction blendFunction;
+    shader_handle shader;
+    bool depth_test_enabled;
+    bool culling_enabled;
+    bool scissor_test_enabled;
+    bool blend_enabled;
+    comparison_function depth_comparison_func;
+    blend_function blend_func;
 };
 
 /***
@@ -166,25 +165,25 @@ struct PipelineOptions
 *
 */
 
-enum class DrawMode
+enum class draw_mode
 {
-    Triangle,
-    Point
+    triangle,
+    point
 };
 
-enum class IndexType
+enum class index_type
 {
-    Ubyte,
-    Uint16,
-    Uint32
+    ubyte,
+    uint16,
+    uint32
 };
 
-struct DrawState
+struct draw_state
 {
-    BufferInfo buffer;
-    DescriptorInfo descriptor;
-    DrawMode mode;
-    int indexCount;
+    buffer_handle buffer;
+    descriptor_handle descriptor;
+    draw_mode mode;
+    int index_count;
 };
 
 /***
@@ -196,99 +195,99 @@ struct DrawState
 */
 
 // TODO: pass window parameter explicitly
-class GraphicsApi
+class graphics_api
 {
 public:
-    static constexpr BufferInfo     InvalidBuffer{ 0xffffffffffffffff };
-    static constexpr DescriptorInfo InvalidDescriptor{ 0u };
-    static constexpr ShaderInfo     InvalidShader{ 0u };
-    static constexpr PipelineInfo   InvalidPipeline{ 0u };
+    static constexpr buffer_handle     invalid_buffer{ 0xffffffffffffffff };
+    static constexpr descriptor_handle invalid_descriptor{ 0u };
+    static constexpr shader_handle     invalid_shader{ 0u };
+    static constexpr pipeline_handle   invalid_pipeline{ 0u };
 
-    static constexpr usize MaxPipelines{ 32u };
-    static constexpr usize MaxDescriptors{ 32u };
+    static constexpr usize max_pipelines{ 32u };
+    static constexpr usize max_descriptors{ 32u };
 
-    struct PassOptions
+    struct pass_options
     {
         // TODO: render target
         vec3f clearColor{ 0.f, 0.f, 0.f };
     };
 
-    struct Options
+    struct options
     {
         int major{ 3 };
         int minor{ 3 };
-        int depthBits{ 24 };
-        int stencilBits{ 8 };
-        int msBuffers{ 1 };
-        int msSamples{ 4 };
+        int depth_bits{ 24 };
+        int stencil_bits{ 8 };
+        int ms_buffers{ 1 };
+        int sample_count{ 4 };
     };
 
-    GraphicsApi();
-    ~GraphicsApi();
+    graphics_api();
+    ~graphics_api();
 
-    GraphicsApi(const GraphicsApi&) = delete;
-    GraphicsApi(GraphicsApi&&) = delete;
-    GraphicsApi& operator=(const GraphicsApi&) = delete;
-    GraphicsApi& operator=(GraphicsApi&&) = delete;
+    graphics_api(const graphics_api&) = delete;
+    graphics_api(graphics_api&&) = delete;
+    graphics_api& operator=(const graphics_api&) = delete;
+    graphics_api& operator=(graphics_api&&) = delete;
 
-    bool initialize(const Options& options);
+    bool initialize(const options& options);
 
     // create a new buffer on the GPU
     // data is a pointer to a contiguous array of data
     // elementSize is the size of each element in bytes, elementCount is the number of elements
-    BufferInfo makeBufferWithData(const BufferOptions& options, const void* data, usize dataSize);
-    void setBufferData(BufferInfo info, const void* data, usize bytes);
+    buffer_handle make_buffer_with_data(const buffer_options& options, const void* data, usize data_size);
+    void set_buffer_data(buffer_handle info, const void* data, usize bytes);
     template<typename T>
-    BufferInfo makeBuffer(const BufferOptions& opts, const std::pmr::vector<T>& data)
+    buffer_handle make_buffer(const buffer_options& opts, const std::pmr::vector<T>& data)
     {
         NLRS_ASSERT(data.size() != 0u);
-        return makeBufferWithData(opts, data.data(), sizeof(T) * data.size());
+        return make_buffer_with_data(opts, data.data(), sizeof(T) * data.size());
     }
     template<typename T>
-    BufferInfo makeBuffer(const BufferOptions& opts, const T& obj)
+    buffer_handle make_buffer(const buffer_options& opts, const T& obj)
     {
-        return makeBufferWithData(opts, &obj, sizeof(T));
+        return make_buffer_with_data(opts, &obj, sizeof(T));
     }
     template<typename T>
-    void setBuffer(BufferInfo info, const std::pmr::vector<T>& data)
+    void set_buffer(buffer_handle info, const std::pmr::vector<T>& data)
     {
-        setBufferData(info, data.data(), data.size() * sizeof(T));
+        set_buffer_data(info, data.data(), data.size() * sizeof(T));
     }
     template<typename T>
-    void setBuffer(BufferInfo info, const T& obj)
+    void set_buffer(buffer_handle info, const T& obj)
     {
-        setBufferData(info, &obj, sizeof(T));
+        set_buffer_data(info, &obj, sizeof(T));
     }
-    // release a buffer object created with makeBuffer
+    // release a buffer object created with make_buffer
     // if the buffer object is invalid, then this does nothing
-    void releaseBuffer(BufferInfo info);
+    void release_buffer(buffer_handle info);
 
     // Use a descriptor object to specify the layout of the vertex data in a buffer
-    DescriptorInfo makeDescriptor(const DescriptorOptions& attributes);
-    void releaseDescriptor(DescriptorInfo info);
+    descriptor_handle make_descriptor(const descriptor_options& attributes);
+    void release_descriptor(descriptor_handle info);
 
-    ShaderInfo makeShader(const std::pmr::vector<ShaderStage>&);
-    // release a shader created with makeShader
+    shader_handle make_shader(const std::pmr::vector<shader_stage>&);
+    // release a shader created with make_shader
     // if the shader is invalid, this does nothing
-    void releaseShader(ShaderInfo info);
+    void release_shader(shader_handle info);
 
-    PipelineInfo makePipeline(const PipelineOptions& opts);
-    void releasePipeline(PipelineInfo);
+    pipeline_handle make_pipeline(const pipeline_options& opts);
+    void release_pipeline(pipeline_handle);
 
     // TODO: should the render pass be tied to the concept of a pipeline or not?
-    void beginPass(PipelineInfo info);
-    void endPass();
+    void begin_pass(pipeline_handle info);
+    void end_pass();
 
     // render a buffer object
-    // this must be called after beginPass
-    void applyDrawState(const DrawState& drawState);
-    void applyIndexedDrawState(const DrawState& drawState, BufferInfo indices, IndexType indexType);
+    // this must be called after begin_pass
+    void apply_draw_state(const draw_state& draw_state);
+    void apply_indexed_draw_state(const draw_state& draw_state, buffer_handle indices, index_type index_type);
 
     // TODO: this will probably be included in a draw pass
-    void clearBuffers();
+    void clear_buffers();
 
     // TODO: does this just use the window ptr?
-    void swapBuffers();
+    void swap_buffers();
 
 private:
     struct RenderState;
@@ -296,6 +295,6 @@ private:
     RenderState*    state_;
 };
 
-using GraphicsApiLocator = locator<GraphicsApi>;
+using graphics_api_locator = locator<graphics_api>;
 
 }
