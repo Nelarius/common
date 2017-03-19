@@ -616,9 +616,7 @@ shader_handle graphics_api::make_shader(const std::pmr::vector<shader_stage>& st
                 state_->boundUniformBuffers.insert(std::make_pair(u.buffer, bufferBinding));
                 glBindBufferBase(obj.target, bufferBinding, obj.buffer);
             }
-            LOG_DEBUG << "Matrices binding: " << glGetUniformBlockIndex(program, "Matrices");
-            LOG_DEBUG << "Color binding: " << glGetUniformBlockIndex(program, "Color");
-            glUniformBlockBinding(program, u.blockIndex, bufferBinding);
+            glUniformBlockBinding(program, glGetUniformBlockIndex(program, u.blockName), bufferBinding);
         }
     }
 
