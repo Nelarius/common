@@ -86,19 +86,19 @@ SUITE(file_sentry_test)
     TEST_FIXTURE(test_dir_with_sentry, removing_file_results_in_remove_event)
     {
         int calls = 0;
-        bool fileRemoved = false;
-        file_sentry::action actionWas = file_sentry::action::add;
+        bool file_removed = false;
+        file_sentry::action action_was = file_sentry::action::add;
 
         create_test_file("test_dir/test_file");
 
         auto handle = sentry.add_sentry(
         "test_dir",
-            [&fileRemoved, &actionWas, &calls](file_sentry::handle, const std::fs::path& directory,
+            [&file_removed, &action_was, &calls](file_sentry::handle, const std::fs::path& directory,
                 const std::fs::path& file, file_sentry::action action) -> void
         {
             calls++;
-            fileRemoved = true;
-            actionWas = action;
+            file_removed = true;
+            action_was = action;
         });
 
         CHECK(handle != file_sentry::invalid_handle);
@@ -107,8 +107,8 @@ SUITE(file_sentry_test)
 
         sentry.update();
 
-        CHECK(fileRemoved);
-        CHECK(file_sentry::action::remove == actionWas);
+        CHECK(file_removed);
+        CHECK(file_sentry::action::remove == action_was);
         CHECK_EQUAL(1, calls);
 
         sentry.remove_sentry(handle);
@@ -117,17 +117,17 @@ SUITE(file_sentry_test)
     TEST_FIXTURE(test_dir_with_sentry, modifying_file_results_in_modify_event)
     {
         int calls = 0;
-        file_sentry::action actionWas = file_sentry::action::remove;
+        file_sentry::action action_was = file_sentry::action::remove;
 
         create_test_file("test_dir/test_file");
 
         auto handle = sentry.add_sentry(
             "test_dir",
-            [&actionWas, &calls](file_sentry::handle, const std::fs::path& directory,
+            [&action_was, &calls](file_sentry::handle, const std::fs::path& directory,
                 const std::fs::path& file, file_sentry::action action) -> void
         {
             calls++;
-            actionWas = action;
+            action_was = action;
         });
 
         CHECK(handle != file_sentry::invalid_handle);
@@ -136,7 +136,7 @@ SUITE(file_sentry_test)
 
         sentry.update();
 
-        CHECK(file_sentry::action::modified == actionWas);
+        CHECK(file_sentry::action::modified == action_was);
         CHECK_EQUAL(1, calls);
 
         sentry.remove_sentry(handle);
@@ -147,7 +147,7 @@ SUITE(file_sentry_test)
     TEST_FIXTURE(test_dir_with_sentry, modifying_file_in_nested_dir_results_in_add_event)
     {
         int calls = 0;
-        file_sentry::action actionWas = file_sentry::action::remove;
+        file_sentry::action action_was = file_sentry::action::remove;
 
         std::fs::create_directory("test_dir/nested_dir");
 
@@ -155,13 +155,13 @@ SUITE(file_sentry_test)
 
         auto handle = sentry.add_sentry(
             "test_dir",
-            [&actionWas, &calls](
+            [&action_was, &calls](
                 file_sentry::handle, const std::fs::path& directory,
                 const std::fs::path& file, file_sentry::action action
                 ) -> void
         {
             calls++;
-            actionWas = action;
+            action_was = action;
         });
 
         CHECK(handle != file_sentry::invalid_handle);
@@ -170,7 +170,7 @@ SUITE(file_sentry_test)
 
         sentry.update();
 
-        CHECK(file_sentry::action::modified == actionWas);
+        CHECK(file_sentry::action::modified == action_was);
         CHECK_EQUAL(1, calls);
 
         sentry.remove_sentry(handle);
