@@ -107,9 +107,10 @@ GLenum asGlBufferTarget(nlrs::buffer_type type)
 {
     switch (type)
     {
-        case nlrs::buffer_type::array:       return GL_ARRAY_BUFFER;
-        case nlrs::buffer_type::index_array: return GL_ELEMENT_ARRAY_BUFFER;
-        case nlrs::buffer_type::uniform:     return GL_UNIFORM_BUFFER;
+        case nlrs::buffer_type::array:          return GL_ARRAY_BUFFER;
+        case nlrs::buffer_type::index_array:    return GL_ELEMENT_ARRAY_BUFFER;
+        case nlrs::buffer_type::uniform:        return GL_UNIFORM_BUFFER;
+        case nlrs::buffer_type::shader_storage: return GL_SHADER_STORAGE_BUFFER;
         default: NLRS_ASSERT(!"Unreachable"); return 0;
     }
 }
@@ -450,11 +451,16 @@ bool graphics_api::initialize(const options& opts)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0);
+    glClearColor(0.f, 0.f, 0.f, 1.0);
 
     glGenVertexArrays(1, &state_->dummyVao);
 
     return true;
+}
+
+buffer_handle graphics_api::make_buffer(const buffer_options& opts, usize data_size)
+{
+    return make_buffer_with_data(opts, nullptr, data_size);
 }
 
 buffer_handle graphics_api::make_buffer_with_data(const buffer_options& options, const void* data, usize dataSize)
@@ -616,7 +622,7 @@ shader_handle graphics_api::make_shader(const std::pmr::vector<shader_stage>& st
                 state_->boundUniformBuffers.insert(std::make_pair(u.buffer, bufferBinding));
                 glBindBufferBase(obj.target, bufferBinding, obj.buffer);
             }
-            glUniformBlockBinding(program, glGetUniformBlockIndex(program, u.blockName), bufferBinding);
+            glUniformBlockBinding(program, glGetUniformBlockIndex(program, u.block_name), bufferBinding);
         }
     }
 
@@ -687,7 +693,10 @@ void graphics_api::apply_draw_state(const draw_state& state)
     NLRS_ASSERT(state_->renderPass.active);
 
     const GlBufferObject& obj = asGlBufferObject(state.buffer);
-    glBindBuffer(obj.target, obj.buffer);
+    // for now, ignore the actual target that the buffer was created with
+    // we may want to render objects that are used for shared shader storage,
+    // for instance
+    glBindBuffer(GL_ARRAY_BUFFER, obj.buffer);
     applyDescriptor(state.descriptor);
     glDrawArrays(asGlDrawMode(state.mode), 0, state.index_count);
 }
@@ -698,10 +707,36 @@ void graphics_api::apply_indexed_draw_state(const draw_state& state, buffer_hand
 
     const GlBufferObject& verts = asGlBufferObject(state.buffer);
     const GlBufferObject& indices = asGlBufferObject(ihandle);
-    glBindBuffer(verts.target, verts.buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, verts.buffer);
     glBindBuffer(indices.target, indices.buffer);
     applyDescriptor(state.descriptor);
     glDrawElements(asGlDrawMode(state.mode), state.index_count, asGlIndexType(itype), nullptr);
+}
+
+void graphics_api::dispatch_compute(const compute_options& opts)
+{
+    NLRS_ASSERT(!state_->renderPass.active);
+    NLRS_ASSERT(opts.num_groups_x != 0u);
+    NLRS_ASSERT(opts.num_groups_y != 0u);
+    NLRS_ASSERT(opts.num_groups_z != 0u);
+
+    GLint prevProgram = -1;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &prevProgram);
+    NLRS_ASSERT(prevProgram >= 0);
+
+    glUseProgram(opts.shader);
+    glDispatchCompute(opts.num_groups_x, opts.num_groups_y, opts.num_groups_z);
+    glUseProgram(prevProgram);
+
+    u32 binding = 0u;
+    for (const buffer_block& block : opts.buffers)
+    {
+        const GlBufferObject& obj = asGlBufferObject(block.buffer);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, obj.buffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, obj.buffer);
+        glShaderStorageBlockBinding(opts.shader, glGetProgramResourceIndex(opts.shader, GL_SHADER_STORAGE_BLOCK, block.block_name), binding);
+        binding++;
+    }
 }
 
 void graphics_api::clear_buffers()

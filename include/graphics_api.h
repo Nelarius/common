@@ -27,7 +27,8 @@ enum class buffer_type
 {
     array,
     index_array,
-    uniform
+    uniform,
+    shader_storage
 };
 
 enum class buffer_usage_hint
@@ -93,17 +94,17 @@ enum class shader_type
     compute
 };
 
-struct uniform
+struct uniform_block
 {
     buffer_handle buffer;
-    const char* blockName;
+    const char* block_name;
 };
 
 struct shader_stage
 {
     shader_type type;
     const char* source;
-    resizable_array<uniform, 6> uniforms;
+    resizable_array<uniform_block, 6> uniforms;
 };
 
 /***
@@ -138,8 +139,8 @@ enum class blend_function
 
 struct pipeline_options
 {
-    pipeline_options(shader_handle shaderInfo)
-        : shader(shaderInfo),
+    pipeline_options(shader_handle shader)
+        : shader(shader),
         depth_test_enabled(true),
         culling_enabled(true),
         scissor_test_enabled(false),
@@ -158,10 +159,10 @@ struct pipeline_options
 };
 
 /***
-*       ___                  ______       __
-*      / _ \_______ __    __/ __/ /____ _/ /____
-*     / // / __/ _ `/ |/|/ /\ \/ __/ _ `/ __/ -_)
-*    /____/_/  \_,_/|__,__/___/\__/\_,_/\__/\__/
+*       ___
+*      / _ \_______ __    __
+*     / // / __/ _ `/ |/|/ /
+*    /____/_/  \_,_/|__,__/
 *
 */
 
@@ -184,6 +185,27 @@ struct draw_state
     descriptor_handle descriptor;
     draw_mode mode;
     int index_count;
+};
+
+/***
+*      _____                     __
+*     / ___/__  __ _  ___  __ __/ /____
+*    / /__/ _ \/  ' \/ _ \/ // / __/ -_)
+*    \___/\___/_/_/_/ .__/\_,_/\__/\__/
+*                  /_/
+*/
+
+struct buffer_block
+{
+    buffer_handle buffer;
+    const char* block_name;
+};
+
+struct compute_options
+{
+    shader_handle shader;
+    u32 num_groups_x, num_groups_y, num_groups_z;
+    resizable_array<buffer_block, 6> buffers;
 };
 
 /***
@@ -230,13 +252,12 @@ public:
     graphics_api& operator=(const graphics_api&) = delete;
     graphics_api& operator=(graphics_api&&) = delete;
 
+    // this must be called before any other api methods are used
     bool initialize(const options& options);
 
     // create a new buffer on the GPU
-    // data is a pointer to a contiguous array of data
-    // elementSize is the size of each element in bytes, elementCount is the number of elements
-    buffer_handle make_buffer_with_data(const buffer_options& options, const void* data, usize data_size);
-    void set_buffer_data(buffer_handle info, const void* data, usize bytes);
+    // create a buffer of a given size, but set it's data later
+    buffer_handle make_buffer(const buffer_options& opts, usize data_size);
     template<typename T>
     buffer_handle make_buffer(const buffer_options& opts, const std::pmr::vector<T>& data)
     {
@@ -248,6 +269,10 @@ public:
     {
         return make_buffer_with_data(opts, &obj, sizeof(T));
     }
+    // data is a pointer to a contiguous array of data
+    // elementSize is the size of each element in bytes, elementCount is the number of elements
+    buffer_handle make_buffer_with_data(const buffer_options& options, const void* data, usize data_size);
+    void set_buffer_data(buffer_handle info, const void* data, usize bytes);
     template<typename T>
     void set_buffer(buffer_handle info, const std::pmr::vector<T>& data)
     {
@@ -282,6 +307,8 @@ public:
     // this must be called after begin_pass
     void apply_draw_state(const draw_state& draw_state);
     void apply_indexed_draw_state(const draw_state& draw_state, buffer_handle indices, index_type index_type);
+
+    void dispatch_compute(const compute_options& opts);
 
     // TODO: this will probably be included in a draw pass
     void clear_buffers();
