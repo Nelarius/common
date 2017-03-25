@@ -451,7 +451,6 @@ bool graphics_api::initialize(const options& opts)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glClearColor(0.f, 0.f, 0.f, 1.0);
 
     glGenVertexArrays(1, &state_->dummyVao);
 
@@ -739,9 +738,10 @@ void graphics_api::dispatch_compute(const compute_options& opts)
     }
 }
 
-void graphics_api::clear_buffers()
+void graphics_api::clear_buffers(const vec3f& color)
 {
     NLRS_ASSERT(!state_->renderPass.active);
+    glClearColor(color.r, color.g, color.b, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

@@ -310,8 +310,7 @@ public:
 
     void dispatch_compute(const compute_options& opts);
 
-    // TODO: this will probably be included in a draw pass
-    void clear_buffers();
+    void clear_buffers(const vec3f& clear_color);
 
     // TODO: does this just use the window ptr?
     void swap_buffers();
